@@ -23,6 +23,9 @@ class JsonErrorHandler(RequestHandler):
         _, err, _ = kwargs['exc_info']
         log_message = err.log_message if err.log_message else None
 
+        if status_code == 405 and not log_message:
+            log_message = 'This method is not allowed.'
+
         # Send error object
         self.set_header('Content-Type', 'application/json')
         self.write({
