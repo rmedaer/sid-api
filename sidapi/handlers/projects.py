@@ -60,6 +60,11 @@ class WorkspaceHandler(PyoliteHandler, NegociatorHandler):
                 status_code=409,
                 log_message='Repository \'%s\' already exists' % data['name']
             )
+        except IOError:
+            raise HTTPError(
+                status_code=500,
+                log_message='Failed to save changes'
+            )
         except ValueError:
             raise HTTPError(
                 status_code=400,
