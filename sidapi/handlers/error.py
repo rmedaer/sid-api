@@ -21,7 +21,7 @@ class JsonErrorHandler(RequestHandler):
         """
         # Fetch error message
         _, err, _ = kwargs['exc_info']
-        log_message = err.log_message if err.log_message else None
+        log_message = err.log_message if hasattr(err, 'log_message') else None
 
         if status_code == 405 and not log_message:
             log_message = 'This method is not allowed.'
