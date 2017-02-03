@@ -6,3 +6,5 @@ from .default import DefaultHandler
 from .version import VersionHandler
 from .error import JsonErrorHandler
 from .not_implemented import NotImplementedHandler
+from .projects import WorkspaceHandler
+from .projects import ProjectHandler
