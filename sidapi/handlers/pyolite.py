@@ -7,8 +7,9 @@ This handler generate JSON based on Pyolite objects.
 
 import json
 from json import JSONEncoder
-from tornado.web import RequestHandler
-from pyolite2 import RepositoryCollection, Repository, Rule
+from tornado.web import RequestHandler, HTTPError
+from pyolite2 import Pyolite, RepositoryCollection, Repository, Rule
+from .error import JsonErrorHandler
 
 def repository_name(repository):
     return repository.name
@@ -39,7 +40,19 @@ class PyoliteEncoder(JSONEncoder):
             return JSONEncoder.default(self, obj)
 
 
-class PyoliteHandler(RequestHandler):
+class PyoliteHandler(JsonErrorHandler):
+    def initialize(self, admin_config):
+        self.pyolite = Pyolite(admin_config)
+
+    def prepare(self):
+        try:
+            self.pyolite.load()
+        except:
+            raise HTTPError(
+                status_code=503,
+                log_message='Projects management temporary unavailable.'
+            )
+
     def write(self, chunk, callback=None):
         return RequestHandler.write(self, json.dumps(chunk, cls=PyoliteEncoder))
 

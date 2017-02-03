@@ -6,7 +6,6 @@ This file contains the HTTP server initialization script.
 It's building all the project routes and connect them to their handlers.
 """
 
-from pyolite2 import Pyolite
 from tornado.web import Application
 from tornado.ioloop import IOLoop
 from .handlers import (
@@ -20,12 +19,11 @@ from .handlers import (
 def main(port=80):
     """ Instance and start a tornado HTTP server. """
 
-    pyolite = Pyolite("/home/rme/Documents/Development/sid/pyolite2/tests/fixtures/gitolite.conf")
-    pyolite.load()
+    admin_config = "../pyolite2/tests/fixtures/gitolite.conf"
 
     app = Application([
-        (r"/projects", WorkspaceHandler, dict(pyolite=pyolite)),
-        (r"/projects/(.*)", ProjectHandler, dict(pyolite=pyolite)),
+        (r"/projects", WorkspaceHandler, dict(admin_config=admin_config)),
+        (r"/projects/(.*)", ProjectHandler, dict(admin_config=admin_config)),
         (r"/projects/(.*)/push", NotImplementedHandler),
         (r"/projects/(.*)/settings", NotImplementedHandler),
         (r"/projects/(.*)/settings/(.*)", NotImplementedHandler),
