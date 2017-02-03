@@ -8,12 +8,41 @@ This module contains helper to negociate HTTP content type.
 import mimeparse
 from tornado.web import RequestHandler, HTTPError
 
-class Negociator(RequestHandler):
+class NegociatorHandler(RequestHandler):
     """ Abstract request handler to negociate content type.
 
     This handler expose methods to negociate incoming content type (within 'Accept'
     header). It's finding the best match with accepted mime types.
     """
+
+    def accepted_content_type(self, accepted):
+        if not accepted:
+            raise HTTPError(
+                status_code=500
+            )
+
+        header = self.request.headers.get('Content-Type')
+        if not header:
+            raise HTTPError(
+                status_code=400,
+                log_message='Missing \'Content-type\' header.'
+            )
+
+        try:
+            content_type = mimeparse.best_match(accepted, header)
+        except ValueError:
+            raise HTTPError(
+                status_code=400,
+                log_message='Malformed \'Content-Type\' header.'
+            )
+
+        if not content_type:
+            raise HTTPError(
+                status=415,
+                log_message='Given Content-Type is not allowed.'
+            )
+
+        return content_type
 
     def negociate_content_type(self, accepted, apply_content_type=True):
         """ Negociate content-type from incoming request ('accept' header) """
