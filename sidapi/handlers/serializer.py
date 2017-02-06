@@ -1,13 +1,10 @@
 # -*- coding: utf-8 -*-
 
-""" Pyolite handler.
-
-This handler generate JSON based on Pyolite objects.
-"""
-
 from json import JSONEncoder, dumps
 from tornado.web import RequestHandler, HTTPError
 from pyolite2 import RepositoryCollection, Repository, Rule
+
+from .. import __projects_prefix__
 
 def repository_name(repository):
     return repository.name
@@ -20,18 +17,15 @@ def repository_rule(rule):
     )
 
 class SerializerEncoder(JSONEncoder):
-    def iterencode(self, obj, _one_shot=False):
-        rendered = obj
-
-        if isinstance(obj, RepositoryCollection):
-            rendered = map(repository_name, obj)
-
-        return JSONEncoder.iterencode(self, rendered, _one_shot)
-
     def default(self, obj):
         if isinstance(obj, Repository):
+            name = obj.name
+
+            if name.startswith(__projects_prefix__):
+                name = name[len(__projects_prefix__):]
+
             return dict(
-                name=obj.name,
+                name=name,
                 rules=map(repository_rule, obj.rules())
             )
         else:

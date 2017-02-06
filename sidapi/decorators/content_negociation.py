@@ -1,6 +1,5 @@
-
 import mimeparse
-from tornado.web import RequestHandler, HTTPError
+from tornado.web import HTTPError
 
 def accepted_content_type(accepted):
     def accepted_content_type_decorator(func):
