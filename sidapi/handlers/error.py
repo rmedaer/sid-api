@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-""" JSON error handler
+""" Error handler
 
 This handler translate raised HTTPError into understandable and formatted
 error message.
@@ -8,17 +8,13 @@ error message.
 
 from tornado.web import RequestHandler
 
-class JsonErrorHandler(RequestHandler):
-    """ JSON error handler.
+class ErrorHandler(RequestHandler):
+    """ Error handler.
 
     Format raised HTTPError into JSON format.
     """
 
     def write_error(self, status_code, **kwargs):
-        """ Format error into JSON format.
-
-        Override write_error method from RequestHandler.
-        """
         # Fetch error message
         _, err, _ = kwargs['exc_info']
         log_message = err.log_message if hasattr(err, 'log_message') else None

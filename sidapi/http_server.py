@@ -19,7 +19,7 @@ from .handlers import (
 def main(port=80):
     """ Instance and start a tornado HTTP server. """
 
-    admin_config = "../pyolite2/tests/fixtures/gitolite.conf"
+    admin_config = "/home/rme/Documents/Development/sid/gitolite-admin-test/gitolite.conf"
 
     app = Application([
         (r"/projects", WorkspaceHandler, dict(admin_config=admin_config)),
