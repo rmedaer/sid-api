@@ -7,21 +7,9 @@ from pyolite2 import RepositoryDuplicateError, Repository
 from .. import __projects_prefix__
 from .error import ErrorHandler
 from .serializer import SerializerHandler
-from ..objects import PyoliteRepository
 from ..decorators import negociate_content_type, accepted_content_type, parse_json_body
-
-POST_PROJECT = {
-    "type": "object",
-    "properties": {
-        "name": {
-            "type": "string"
-        }
-    },
-    "required": [
-        "name"
-    ],
-    "additionalProperties": False
-}
+from ..helpers import PyoliteRepository
+from ..schemas import PROJECT_SCHEMA
 
 class WorkspaceHandler(ErrorHandler, SerializerHandler):
     """ This handler manage a workspace. """
@@ -30,7 +18,6 @@ class WorkspaceHandler(ErrorHandler, SerializerHandler):
         self.pyolite = None
         self.admin_config = admin_config
 
-    @negociate_content_type(['application/json'])
     def prepare(self):
         self.pyolite = PyoliteRepository(self.admin_config)
 
@@ -42,6 +29,7 @@ class WorkspaceHandler(ErrorHandler, SerializerHandler):
                 log_message='Projects management temporary unavailable.'
             )
 
+    @negociate_content_type(['application/json'])
     def get(self):
         """ List available projects within this workspace. """
         def projects_filter(project):
@@ -49,8 +37,9 @@ class WorkspaceHandler(ErrorHandler, SerializerHandler):
 
         self.write(filter(projects_filter, self.pyolite.repos))
 
+    @negociate_content_type(['application/json'])
     @accepted_content_type(['application/json'])
-    @parse_json_body(POST_PROJECT)
+    @parse_json_body(PROJECT_SCHEMA)
     def post(self):
         try:
             # Create and add repository

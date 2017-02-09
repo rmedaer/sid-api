@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 
 from pyolite2 import Pyolite
 from .git_repository import GitRepository
