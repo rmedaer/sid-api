@@ -14,6 +14,7 @@ from .handlers import (
     NotImplementedHandler,
     WorkspaceHandler,
     ProjectHandler,
+    TemplateHandler,
     TemplateCollectionHandler
 )
 
@@ -30,7 +31,7 @@ def main(port=80):
         (r"/projects/(.*)/settings/(.*)", NotImplementedHandler),
         (r"/projects/(.*)/template", NotImplementedHandler),
         (r"/templates", TemplateCollectionHandler, dict(admin_config=admin_config)),
-        (r"/templates/(.*)", NotImplementedHandler),
+        (r"/templates/(.*)", TemplateHandler, dict(admin_config=admin_config)),
         (r"/version", VersionHandler),
         (r".*", DefaultHandler)
     ])
