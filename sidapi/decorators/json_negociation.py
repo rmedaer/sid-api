@@ -1,5 +1,5 @@
 from json import loads
-from jsonschema import validate, ValidationError
+from jsonschema import validate, ValidationError, SchemaError
 from tornado.web import HTTPError
 
 def parse_json_body(schema=None):
@@ -22,6 +22,13 @@ def parse_json_body(schema=None):
                     raise HTTPError(
                         status_code=400,
                         log_message='JSON error: %s' % ve.message
+                    )
+                except SchemaError as se:
+                    # TODO log SchemaError for administrators and developpers
+                    raise HTTPError(
+                        status_code=500,
+                        log_message='Invalid JSON schema. '
+                                    'Please contact your administrator.'
                     )
 
             # Set json to current object
