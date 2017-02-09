@@ -13,7 +13,8 @@ from .handlers import (
     DefaultHandler,
     NotImplementedHandler,
     WorkspaceHandler,
-    ProjectHandler
+    ProjectHandler,
+    TemplateCollectionHandler
 )
 
 def main(port=80):
@@ -28,7 +29,7 @@ def main(port=80):
         (r"/projects/(.*)/settings", NotImplementedHandler),
         (r"/projects/(.*)/settings/(.*)", NotImplementedHandler),
         (r"/projects/(.*)/template", NotImplementedHandler),
-        (r"/templates", NotImplementedHandler),
+        (r"/templates", TemplateCollectionHandler, dict(admin_config=admin_config)),
         (r"/templates/(.*)", NotImplementedHandler),
         (r"/version", VersionHandler),
         (r".*", DefaultHandler)
