@@ -1,3 +1,7 @@
+# -*- coding: utf-8 -*-
+
+""" This module contains body schema for project management handlers. """
+
 PROJECT_SCHEMA = {
     "type": "object",
     "properties": {
@@ -17,7 +21,7 @@ PROJECT_SCHEMA = {
                         }
                     },
                     "perm": {
-                        "enum": [ "RW", "C", "R" ]
+                        "enum": ["RW", "C", "R"]
                     }
                 },
                 "required": [
@@ -40,11 +44,11 @@ PROJECT_PATCH_SCHEMA = {
         "type": "object",
         "properties": {
             "op": {
-                "enum": [ "add", "replace", "remove" ]
+                "enum": ["add", "replace", "remove"]
             },
             "path": {
                 "type": "string",
-                "pattern": "^(\/name)|(\/rules\/[0-9]*)$"
+                "pattern": r"^(\/name)|(\/rules\/[0-9]*)$"
             },
             "value": {
             }

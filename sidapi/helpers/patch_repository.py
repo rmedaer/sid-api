@@ -1,10 +1,15 @@
 # -*- coding: utf-8 -*-
 
+""" This module contains functions to patch a given repository with
+a JSON patch. """
+
 import re
 from tornado.web import HTTPError
 from pyolite2 import Rule
 
 def patch_repo(repo, patches):
+    """ Patch a repository with given JSON patch """
+
     for patch in patches:
         # Renaming a project is currently not implemented
         if patch['path'] == '/name' and patch['op'] == 'replace':

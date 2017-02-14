@@ -16,7 +16,8 @@ from .error import ErrorHandler
 from .serializer import SerializerHandler
 from .workspace import WorkspaceHandler
 from ..helpers import PyoliteEncoder, patch_repo
-from ..decorators import negociate_content_type, accepted_content_type, parse_json_body
+from sidapi.decorators.content_negociation import negociate_content_type, accepted_content_type
+from sidapi.decorators.json_negociation import parse_json_body
 from ..schemas import PROJECT_SCHEMA, PROJECT_PATCH_SCHEMA
 
 class ProjectHandler(WorkspaceHandler, ErrorHandler, SerializerHandler):
@@ -44,7 +45,7 @@ class ProjectHandler(WorkspaceHandler, ErrorHandler, SerializerHandler):
                 log_message='Project not found.'
             )
 
-        patch_repo(repo, make_patch(PyoliteEncoder().default(repo), self.json))
+        patch_repo(repo, make_patch(PyoliteEncoder().default(repo), self.json)) # pylint: disable=E1101
 
         try:
             # Save Gitolite configuration and commit changes
@@ -70,7 +71,7 @@ class ProjectHandler(WorkspaceHandler, ErrorHandler, SerializerHandler):
                 log_message='Project not found.'
             )
 
-        patch_repo(repo, self.json)
+        patch_repo(repo, self.json) # pylint: disable=E1101
 
         try:
             # Save Gitolite configuration and commit changes

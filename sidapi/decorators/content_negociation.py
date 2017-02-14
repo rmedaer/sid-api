@@ -1,52 +1,68 @@
+# -*- coding: utf-8 -*-
+
+""" This module contains decorators to manage content type negociation. """
+
 import mimeparse
 from tornado.web import HTTPError
 
 def accepted_content_type(accepted):
-    def accepted_content_type_decorator(func):
+    """ Negociate accepted content-type received on POST, PUT and PATCH methods """
+
+    # pylint: disable=C0111
+    def _accepted_content_type(func):
+        # pylint: disable=C0111
         def wrapper(*args, **kwargs):
-            if not accepted:
-               raise HTTPError(
-                   status_code=500
-               )
+            if not accepted: # pragma: no cover
+                raise HTTPError(
+                    status_code=500
+                )
 
             header = args[0].request.headers.get('Content-Type')
             if not header:
-               raise HTTPError(
-                   status_code=400,
-                   log_message='Missing \'Content-type\' header.'
-               )
+                raise HTTPError(
+                    status_code=400,
+                    log_message='Missing \'Content-type\' header.'
+                )
 
             try:
-               content_type = mimeparse.best_match(accepted, header)
+                content_type = mimeparse.best_match(accepted, header)
             except ValueError:
-               raise HTTPError(
-                   status_code=400,
-                   log_message='Malformed \'Content-Type\' header.'
-               )
+                raise HTTPError(
+                    status_code=400,
+                    log_message='Malformed \'Content-Type\' header.'
+                )
 
             if not content_type:
-               raise HTTPError(
-                   status=415,
-                   log_message='Given Content-Type is not allowed.'
-               )
+                raise HTTPError(
+                    status_code=415,
+                    log_message='Given Content-Type is not allowed.'
+                )
 
             return func(*args, **kwargs)
         return wrapper
-    return accepted_content_type_decorator
+    return _accepted_content_type
 
 def negociate_content_type(accepted):
-    def negociate_content_type_decorator(func):
+    """ Negociate content type wished by HTTP client (header 'Accept') """
+
+    # pylint: disable=C0111
+    def _negociate_content_type(func):
+        # pylint: disable=C0111
         def wrapper(*args, **kwargs):
             # If not any content_type given, it returns a internal server error
-            if not accepted:
+            if not accepted: # pragma: no cover
                 raise HTTPError(
                     status_code=500
                 )
 
             # Try to find best match between accepted mime types and 'Accept' header
             try:
-                content_type = mimeparse.best_match(accepted, args[0].request.headers.get('Accept', '*/*'))
-            except ValueError: # NOTE should be replaced by MimeTypeParseException (mimeparse >= 1.5.2)
+                content_type = mimeparse.best_match(
+                    accepted,
+                    args[0].request.headers.get('Accept', '*/*')
+                )
+            # NOTE should be replaced by MimeTypeParseException (mimeparse >= 1.5.2)
+            except ValueError:
                 raise HTTPError(
                     status_code=400,
                     log_message='Malformed \'Accept\' header.'
@@ -56,9 +72,10 @@ def negociate_content_type(accepted):
             if not content_type:
                 raise HTTPError(
                     status_code=415,
-                    log_message='Content type negociation failed. Accepted media type are unsupported.'
+                    log_message='Content type negociation failed. '
+                                'Accepted media type are unsupported.'
                 )
 
             return func(*args, **kwargs)
         return wrapper
-    return negociate_content_type_decorator
+    return _negociate_content_type

@@ -1,2 +1,4 @@
-from content_negociation import accepted_content_type, negociate_content_type
-from json_negociation import parse_json_body
+""" Decorator module contains decorating classes and functions. """
+
+from sidapi.decorators import content_negociation
+from sidapi.decorators import json_negociation

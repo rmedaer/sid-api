@@ -1,0 +1,7 @@
+[run]
+branch = False
+omit = sidapi/__main__.py
+
+[report]
+# Testing' Nazi
+fail_under = 75

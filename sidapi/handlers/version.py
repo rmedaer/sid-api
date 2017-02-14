@@ -5,9 +5,9 @@
 This handler returns the current version of the API.
 """
 
-from .. import __version__
+from sidapi import __version__
 from .error import ErrorHandler
-from ..decorators import negociate_content_type
+from sidapi.decorators.content_negociation import negociate_content_type
 
 class VersionHandler(ErrorHandler):
     """ Version handler. See module documentation. """

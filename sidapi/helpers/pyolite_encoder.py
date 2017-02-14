@@ -1,18 +1,19 @@
 # -*- coding: utf-8 -*-
 
+""" This module contains function and encoder to serialize known object
+such as Pyolite classes """
+
 from json import JSONEncoder
-from pyolite2 import RepositoryCollection, Repository, Rule
-
-from .. import __projects_prefix__, __templates_prefix__
-
-def repository_rule(rule):
-    return dict(
-        perm=rule.perm,
-        users=rule
-    )
+from pyolite2 import Repository
+from sidapi import __projects_prefix__, __templates_prefix__
 
 class PyoliteEncoder(JSONEncoder):
+    """ JSON encoder for Pyolite classes """
+
     def default(self, obj):
+        """ Default encoding method. """
+        # pylint: disable=E0202
+
         if isinstance(obj, Repository):
             name = obj.name
 
@@ -25,7 +26,9 @@ class PyoliteEncoder(JSONEncoder):
             # Format Repository with only the name and its rules
             return dict(
                 name=name,
-                rules=map(repository_rule, obj.rules())
+                rules=[dict(perm=rule.perm, users=rule)
+                       for rule in obj.rules()]
+
             )
         else:
             return JSONEncoder.default(self, obj)

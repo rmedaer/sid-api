@@ -1,11 +1,19 @@
 # -*- coding: utf-8 -*-
 
-from pygit2 import Repository, discover_repository
+""" Extends features from pygit2 library. """
 
-class GitRepositoryNotFound(Exception): pass
+from pygit2 import Repository, discover_repository # pylint: disable=E0611
+
+class GitRepositoryNotFound(Exception):
+    """ Error thrown when Git repository doesn't exist. """
+    pass
 
 class GitRepository(Repository):
+    """ Inherits pygit2.Repository to implement easier Git methods. """
+
     def __init__(self, uri):
+        """ Initialize a Git Repository. """
+
         # Discover Git repository under admin_config file
         try:
             Repository.__init__(self, discover_repository(uri))
@@ -13,6 +21,8 @@ class GitRepository(Repository):
             raise GitRepositoryNotFound()
 
     def commit_all(self, message, user=None, parents=None):
+        """ Commit all files changed. """
+
         # Use default signature if user is not given
         if not user:
             user = self.default_signature
@@ -29,7 +39,7 @@ class GitRepository(Repository):
         tree = self.index.write_tree()
 
         # Create commit
-        commit = self.create_commit(
+        self.create_commit(
             'HEAD', # Reference name
             user, user, # Author and committer
             message, # Commit message

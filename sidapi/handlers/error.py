@@ -19,7 +19,9 @@ class ErrorHandler(RequestHandler):
         _, err, _ = kwargs['exc_info']
         log_message = err.log_message if hasattr(err, 'log_message') else None
 
-        if status_code == 405 and not log_message:
+        if status_code == 405 and not log_message: # pragma: no cover
+            # NOTE could be tested by defining a new custom handlers in tests ...
+            # I don't think it's really usefull.
             log_message = 'This method is not allowed.'
 
         # Send error object
@@ -29,6 +31,6 @@ class ErrorHandler(RequestHandler):
             'message': log_message
         })
 
-    def data_received(self, chunk):
+    def data_received(self, chunk): # pragma: no cover
         """ Not implemented ! """
         return
