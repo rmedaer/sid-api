@@ -12,25 +12,25 @@ from sidapi import __projects_prefix__
 from sidapi.handlers.error import ErrorHandler
 from sidapi.handlers.serializer import SerializerHandler
 from sidapi.handlers.pyolite import PyoliteHandler
-from sidapi.decorators.content_negociation import negociate_content_type, accepted_content_type
+from sidapi.decorators.content_negociation import available_content_type, accepted_content_type
 from sidapi.decorators.json_negociation import parse_json_body
 from sidapi.schemas import PROJECT_SCHEMA
 
 class WorkspaceHandler(PyoliteHandler, ErrorHandler, SerializerHandler):
     """ This handler manage a workspace. """
 
-    @negociate_content_type(['application/json'])
-    def get(self):
+    @available_content_type(['application/json'])
+    def get(self, *args, **kwargs):
         """ List available projects within this workspace. """
 
         self.write([project
                     for project in self.pyolite.repos
                     if project.name.startswith(__projects_prefix__)])
 
-    @negociate_content_type(['application/json'])
     @accepted_content_type(['application/json'])
+    @available_content_type(['application/json'])
     @parse_json_body(PROJECT_SCHEMA)
-    def post(self):
+    def post(self, *args, **kwargs):
         """ Add a new project in the workspace. """
          # pylint: disable=E1101
 

@@ -8,13 +8,13 @@ from sidapi import __templates_prefix__
 from sidapi.handlers.error import ErrorHandler
 from sidapi.handlers.serializer import SerializerHandler
 from sidapi.handlers.pyolite import PyoliteHandler
-from sidapi.decorators.content_negociation import negociate_content_type
+from sidapi.decorators.content_negociation import available_content_type
 
 class TemplateCollectionHandler(PyoliteHandler, ErrorHandler, SerializerHandler):
     """ This handler manage templates from Pyolite configuration. """
 
-    @negociate_content_type(['application/json'])
-    def get(self):
+    @available_content_type(['application/json'])
+    def get(self, *args, **kwargs):
         """ List available templates. """
 
         self.write([project

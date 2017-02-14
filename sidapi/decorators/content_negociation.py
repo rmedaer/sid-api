@@ -38,15 +38,16 @@ def accepted_content_type(accepted):
                     log_message='Given Content-Type is not allowed.'
                 )
 
+            kwargs['input_content_type'] = content_type
             return func(*args, **kwargs)
         return wrapper
     return _accepted_content_type
 
-def negociate_content_type(accepted):
+def available_content_type(accepted):
     """ Negociate content type wished by HTTP client (header 'Accept') """
 
     # pylint: disable=C0111
-    def _negociate_content_type(func):
+    def _available_content_type(func):
         # pylint: disable=C0111
         def wrapper(*args, **kwargs):
             # If not any content_type given, it returns a internal server error
@@ -76,6 +77,7 @@ def negociate_content_type(accepted):
                                 'Accepted media type are unsupported.'
                 )
 
+            kwargs['output_content_type'] = content_type
             return func(*args, **kwargs)
         return wrapper
-    return _negociate_content_type
+    return _available_content_type
