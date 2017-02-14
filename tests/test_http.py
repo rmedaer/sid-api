@@ -51,12 +51,27 @@ class TestHandler(ErrorHandler):
     def put(self):
         pass
 
+class InvalidContentTypeNegociation(ErrorHandler):
+    """ Invalid handler. """
+
+    @available_content_type([])
+    def get(self):
+        """ Using available_content_type decorator with empty parameter """
+        pass
+
+    @accepted_content_type([])
+    def post(self):
+        """ Using accepted_content_type decorator with empty parameter """
+        pass
+
+
 @pytest.fixture
 def app():
     """ Create application fixture with testing handler. """
 
     return Application([
         (r"/test", TestHandler),
+        (r"/invalid_content_type_negociation", InvalidContentTypeNegociation),
         (r".*", DefaultHandler)
     ])
 
@@ -241,6 +256,43 @@ def test_invalid_json_schema(http_client, base_url):
             method='PUT',
             body=json.dumps({
             }),
+            headers={
+                'Content-Type': 'application/json'
+            }
+        ))
+        assert False
+    except HTTPError as err:
+        assert err.code == 500
+
+@pytest.mark.gen_test
+def test_no_output_content_type(http_client, base_url):
+    """
+    When developer made a mistake on 'available_content_type' decorator,
+    server should answer with error 500.
+    """
+    try:
+        yield http_client.fetch(HTTPRequest(
+            urljoin(base_url, '/invalid_content_type_negociation'),
+            method='GET',
+            headers={
+                'Content-Type': 'application/json'
+            }
+        ))
+        assert False
+    except HTTPError as err:
+        assert err.code == 500
+
+@pytest.mark.gen_test
+def test_no_input_content_type(http_client, base_url):
+    """
+    When developer made a mistake on 'accepted_content_type' decorator,
+    server should answer with error 500.
+    """
+    try:
+        yield http_client.fetch(HTTPRequest(
+            urljoin(base_url, '/invalid_content_type_negociation'),
+            method='POST',
+            body=json.dumps({}),
             headers={
                 'Content-Type': 'application/json'
             }

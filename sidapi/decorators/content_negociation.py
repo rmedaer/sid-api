@@ -12,7 +12,7 @@ def accepted_content_type(accepted):
     def _accepted_content_type(func):
         # pylint: disable=C0111
         def wrapper(*args, **kwargs):
-            if not accepted: # pragma: no cover
+            if not accepted:
                 raise HTTPError(
                     status_code=500
                 )
@@ -51,7 +51,7 @@ def available_content_type(accepted):
         # pylint: disable=C0111
         def wrapper(*args, **kwargs):
             # If not any content_type given, it returns a internal server error
-            if not accepted: # pragma: no cover
+            if not accepted:
                 raise HTTPError(
                     status_code=500
                 )
