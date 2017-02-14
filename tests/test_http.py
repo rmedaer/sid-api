@@ -9,47 +9,97 @@ import json
 import pytest
 
 from tornado.httpclient import HTTPRequest, HTTPError
-from sidapi.http_server import create_app
+from tornado.web import Application
+from sidapi.handlers.error import ErrorHandler
+from sidapi.handlers.default import DefaultHandler
+from sidapi.decorators.content_negociation import available_content_type, accepted_content_type
+from sidapi.decorators.json_negociation import parse_json_body
+
+class TestHandler(ErrorHandler):
+    """ Test handler. """
+
+    @available_content_type(['application/json'])
+    def get(self):
+        self.write(json.dumps({
+            'name': 'value'
+        }))
+
+    @accepted_content_type(['application/json'])
+    @available_content_type(['application/json'])
+    @parse_json_body({
+        "type": "object",
+        "properties": {
+            "name": {
+                "type": "string"
+            }
+        },
+        "required": [
+            "name"
+        ],
+        "additionalProperties": False
+    })
+    def post(self):
+        self.write(json.dumps({
+            'name': 'value'
+        }))
+
+    @accepted_content_type(['application/json'])
+    @available_content_type(['application/json'])
+    @parse_json_body({
+        "type": "invalid"
+    })
+    def put(self):
+        pass
 
 @pytest.fixture
 def app():
-    """ Create app fixture for following tests """
+    """ Create application fixture with testing handler. """
 
-    return create_app('tests/fixtures/gitolite/gitolite.conf')
-
-@pytest.mark.gen_test
-def test_method_not_allowed(http_client, base_url):
-    """ Testing method not allowed """
-
-    try:
-        http_client.fetch(HTTPRequest(
-            urljoin(base_url, '/version'),
-            method='POST',
-            body=''
-        ))
-    except HTTPError as err:
-        assert err.code == 405
-
+    return Application([
+        (r"/test", TestHandler),
+        (r".*", DefaultHandler)
+    ])
 
 @pytest.mark.gen_test
 def test_route_not_found(http_client, base_url):
-    """ Testing route not found """
+    """
+    When a route is not found, server should answer with "404 - Not Found"
+    """
 
     try:
         yield http_client.fetch(HTTPRequest(
-            urljoin(base_url, '/brol')
+            urljoin(base_url, '/not-found')
         ))
         assert False
     except HTTPError as err:
         assert err.code == 404
 
 @pytest.mark.gen_test
-def test_invalid_accepted_content_type(http_client, base_url):
-    """ Testing invalid 'Accept' header """
+def test_method_not_allowed(http_client, base_url):
+    """
+    When a method is not define in handler,
+    server shoud answer with "405 - Method not allowed"
+    """
+
+    try:
+        http_client.fetch(HTTPRequest(
+            urljoin(base_url, '/test'),
+            method='PATCH',
+            body=''
+        ))
+    except HTTPError as err:
+        assert err.code == 405
+
+@pytest.mark.gen_test
+def test_invalid_accept_header(http_client, base_url):
+    """
+    When client send invalid 'Accept' header,
+    server should answer with "400 - Bad request"
+    """
 
     try:
         yield http_client.fetch(HTTPRequest(
-            urljoin(base_url, '/version'),
+            urljoin(base_url, '/test'),
             headers={
                 "Accept": "invalid"
             }
@@ -59,12 +109,15 @@ def test_invalid_accepted_content_type(http_client, base_url):
         assert err.code == 400
 
 @pytest.mark.gen_test
-def test_wrong_accepted_content_type(http_client, base_url):
-    """ Testing wrong 'Accept' header """
+def test_asked_content_type_not_supported(http_client, base_url):
+    """
+    When client accepted content-type not allowed by server,
+    it should anwser with error 415.
+    """
 
     try:
         yield http_client.fetch(HTTPRequest(
-            urljoin(base_url, '/version'),
+            urljoin(base_url, '/test'),
             headers={
                 "Accept": "text/plain"
             }
@@ -75,13 +128,16 @@ def test_wrong_accepted_content_type(http_client, base_url):
 
 @pytest.mark.gen_test
 def test_missing_content_type(http_client, base_url):
-    """ Testing wrong 'Content-Type' header """
+    """
+    When client post without 'Content-Type',
+    server should return error 400.
+    """
 
     try:
         yield http_client.fetch(HTTPRequest(
-            urljoin(base_url, '/projects'),
+            urljoin(base_url, '/test'),
             method='POST',
-            body='This is not JSON',
+            body='',
             headers={
                 'Content-Type': ''
             }
@@ -92,11 +148,14 @@ def test_missing_content_type(http_client, base_url):
 
 @pytest.mark.gen_test
 def test_invalid_content_type(http_client, base_url):
-    """ Testing invalid 'Content-Type' header """
+    """
+    When client post with invalid 'Content-Type',
+    server should return error 400.
+    """
 
     try:
         yield http_client.fetch(HTTPRequest(
-            urljoin(base_url, '/projects'),
+            urljoin(base_url, '/test'),
             method='POST',
             body=json.dumps({}),
             headers={
@@ -108,14 +167,17 @@ def test_invalid_content_type(http_client, base_url):
         assert err.code == 400
 
 @pytest.mark.gen_test
-def test_wrong_content_type(http_client, base_url):
-    """ Testing wrong 'Content-Type' header """
+def test_content_type_not_supported(http_client, base_url):
+    """
+    When client post with unsupported 'Content-Type',
+    server should answer error 415.
+    """
 
     try:
         yield http_client.fetch(HTTPRequest(
-            urljoin(base_url, '/projects'),
+            urljoin(base_url, '/test'),
             method='POST',
-            body='This is not JSON',
+            body='',
             headers={
                 'Content-Type': 'text/plain'
             }
@@ -125,14 +187,17 @@ def test_wrong_content_type(http_client, base_url):
         assert err.code == 415
 
 @pytest.mark.gen_test
-def test_wrong_json_content(http_client, base_url):
-    """ Testing wrong body """
+def test_invalid_json_body(http_client, base_url):
+    """
+    When client post with 'application/json' content_type,
+    the body should be parsed in JSON otherwise server return error 400.
+    """
 
     try:
         yield http_client.fetch(HTTPRequest(
-            urljoin(base_url, '/projects'),
+            urljoin(base_url, '/test'),
             method='POST',
-            body='It should be json but it\'s not',
+            body='It should be a JSON doc but it\'s not',
             headers={
                 'Content-Type': 'application/json'
             }
@@ -142,12 +207,15 @@ def test_wrong_json_content(http_client, base_url):
         assert err.code == 400
 
 @pytest.mark.gen_test
-def test_wrong_json_schema(http_client, base_url):
-    """ Testing json body """
+def test_invalid_json_body_schema(http_client, base_url):
+    """
+    When client post JSON which is not valid according to schema,
+    the server should return error 400.
+    """
 
     try:
         yield http_client.fetch(HTTPRequest(
-            urljoin(base_url, '/projects'),
+            urljoin(base_url, '/test'),
             method='POST',
             body=json.dumps({
                 "no-name": "should not be valid"
@@ -159,3 +227,24 @@ def test_wrong_json_schema(http_client, base_url):
         assert False
     except HTTPError as err:
         assert err.code == 400
+
+@pytest.mark.gen_test
+def test_invalid_json_schema(http_client, base_url):
+    """
+    When developer made a mistake in JSON schema,
+    server should answer with error 500.
+    """
+
+    try:
+        yield http_client.fetch(HTTPRequest(
+            urljoin(base_url, '/test'),
+            method='PUT',
+            body=json.dumps({
+            }),
+            headers={
+                'Content-Type': 'application/json'
+            }
+        ))
+        assert False
+    except HTTPError as err:
+        assert err.code == 500

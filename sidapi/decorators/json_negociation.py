@@ -31,7 +31,7 @@ def parse_json_body(schema=None):
                         status_code=400,
                         log_message='JSON error: %s' % vlde.message
                     )
-                except SchemaError: # pragma: no cover
+                except SchemaError:
                     # TODO log SchemaError for administrators and developpers
                     # TODO implement test... not mandatory since it's a internal
                     # validation of schemas...
