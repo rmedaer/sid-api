@@ -7,6 +7,7 @@ from urlparse import urljoin
 import json
 import pytest
 
+from tornado.httpclient import HTTPRequest, HTTPError
 from sidapi.http_server import create_app
 
 @pytest.fixture
@@ -65,3 +66,16 @@ def test_template_fetch_ok(http_client, base_url):
             }
         ]
     }
+
+@pytest.mark.gen_test
+def test_template_not_found(http_client, base_url):
+    """ When a template is not found """
+
+    try:
+        yield http_client.fetch(HTTPRequest(
+            urljoin(base_url, '/templates/unknown-template'),
+            method='GET',
+        ))
+        assert False
+    except HTTPError as err:
+        assert err.code == 404
