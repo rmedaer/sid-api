@@ -14,7 +14,7 @@ from sidapi.http_server import create_app
 def app():
     """ Create app fixture for following tests """
 
-    return create_app('tests/fixtures/gitolite/gitolite.conf')
+    return create_app('tests/fixtures/gitolite.conf')
 
 @pytest.mark.gen_test
 def test_version(http_client, base_url):

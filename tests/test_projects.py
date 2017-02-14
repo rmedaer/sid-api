@@ -4,21 +4,28 @@
 
 from urlparse import urljoin
 
+import os
 import json
 import pytest
 
 from tornado.httpclient import HTTPRequest, HTTPError
 from sidapi.http_server import create_app
+from .fixture import gitolite_fixture
 
 @pytest.fixture
 def app():
     """ Create app fixture for following tests """
 
-    return create_app('tests/fixtures/gitolite/gitolite.conf')
+    path = os.path.join(os.getcwd(), 'tests', 'fixtures', 'gitolite')
+    admin_config = gitolite_fixture(path)
+
+    return create_app(admin_config)
 
 @pytest.mark.gen_test
 def test_project_list(http_client, base_url):
-    """ Testing projects list """
+    """
+    Try to fetch project listing.
+    """
 
     response = yield http_client.fetch(urljoin(base_url, '/projects'))
     assert response.code == 200
@@ -52,8 +59,10 @@ def test_project_list(http_client, base_url):
     ]
 
 @pytest.mark.gen_test
-def test_template_fetch_ok(http_client, base_url):
-    """ Fetch an existing project """
+def test_fetch_project(http_client, base_url):
+    """
+    Try to fetch an existing project.
+    """
 
     response = yield http_client.fetch(urljoin(base_url, '/projects/my-next-project'))
     assert response.code == 200
@@ -68,8 +77,11 @@ def test_template_fetch_ok(http_client, base_url):
     }
 
 @pytest.mark.gen_test
-def test_template_fetch_not_found(http_client, base_url):
-    """ Fetch a project which should not exist """
+def test_project_not_found(http_client, base_url):
+    """
+    When client try to get a project which doesn't exist,
+    server should return an error 404.
+    """
 
     try:
         yield http_client.fetch(urljoin(base_url, '/projects/nice-try'))
@@ -78,8 +90,11 @@ def test_template_fetch_not_found(http_client, base_url):
         assert err.code == 404
 
 @pytest.mark.gen_test
-def test_template_add(http_client, base_url):
-    """ Add a project which alread exists """
+def test_project_already_exist(http_client, base_url):
+    """
+    When client try to add a new project which already exist,
+    server answer with error 409.
+    """
 
     try:
         yield http_client.fetch(HTTPRequest(
@@ -95,3 +110,27 @@ def test_template_add(http_client, base_url):
         assert False
     except HTTPError as err:
         assert err.code == 409
+
+@pytest.mark.gen_test
+def test_add_project(http_client, base_url):
+    """
+    Try to add a new project.
+    """
+
+    response = yield http_client.fetch(HTTPRequest(
+        urljoin(base_url, '/projects'),
+        method='POST',
+        headers={
+            'Content-Type': 'application/json'
+        },
+        body=json.dumps({
+            "name": "A project",
+            "rules": [
+                {
+                    "perm": "RW",
+                    "users": ["alice", "bob", "eve"]
+                }
+            ]
+        })
+    ))
+    assert response.code == 200

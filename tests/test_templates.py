@@ -4,17 +4,22 @@
 
 from urlparse import urljoin
 
+import os
 import json
 import pytest
 
 from tornado.httpclient import HTTPRequest, HTTPError
 from sidapi.http_server import create_app
+from .fixture import gitolite_fixture
 
 @pytest.fixture
 def app():
     """ Create app fixture for following tests """
 
-    return create_app('tests/fixtures/gitolite/gitolite.conf')
+    path = os.path.join(os.getcwd(), 'tests', 'fixtures', 'gitolite')
+    admin_config = gitolite_fixture(path)
+
+    return create_app(admin_config)
 
 @pytest.mark.gen_test
 def test_template_list(http_client, base_url):

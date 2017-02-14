@@ -3,5 +3,5 @@ branch = False
 omit = sidapi/__main__.py
 
 [report]
-# Testing' Nazi
-fail_under = 75
+# Testing challenge !
+fail_under = 100
