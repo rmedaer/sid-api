@@ -16,7 +16,7 @@ from sidapi.decorators.content_negociation import available_content_type, accept
 from sidapi.decorators.json_negociation import parse_json_body
 from sidapi.schemas import PROJECT_SCHEMA
 
-class WorkspaceHandler(PyoliteHandler, ErrorHandler, SerializerHandler):
+class ProjectCollectionHandler(PyoliteHandler, ErrorHandler, SerializerHandler):
     """ This handler manage a workspace. """
 
     @available_content_type(['application/json'])

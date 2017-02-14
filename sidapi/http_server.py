@@ -12,8 +12,8 @@ from .handlers import (
     VersionHandler,
     DefaultHandler,
     NotImplementedHandler,
-    WorkspaceHandler,
     ProjectHandler,
+    ProjectCollectionHandler,
     TemplateHandler,
     TemplateCollectionHandler
 )
@@ -27,7 +27,7 @@ def create_app(admin_config):
         (r"/projects/(.*)/template", NotImplementedHandler),
         (r"/projects/(.*)/push", NotImplementedHandler),
         (r"/projects/(.*)", ProjectHandler, dict(admin_config=admin_config)),
-        (r"/projects", WorkspaceHandler, dict(admin_config=admin_config)),
+        (r"/projects", ProjectCollectionHandler, dict(admin_config=admin_config)),
         (r"/templates/(.*)", TemplateHandler, dict(admin_config=admin_config)),
         (r"/templates", TemplateCollectionHandler, dict(admin_config=admin_config)),
         (r"/version", VersionHandler),
