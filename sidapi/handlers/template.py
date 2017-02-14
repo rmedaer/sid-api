@@ -11,12 +11,12 @@ from pyolite2 import RepositoryNotFoundError
 
 # Local imports
 from sidapi import __templates_prefix__
-from .error import ErrorHandler
-from .serializer import SerializerHandler
-from .template_collection import TemplateCollectionHandler
+from sidapi.handlers.error import ErrorHandler
+from sidapi.handlers.serializer import SerializerHandler
+from sidapi.handlers.pyolite import PyoliteHandler
 from sidapi.decorators.content_negociation import negociate_content_type
 
-class TemplateHandler(TemplateCollectionHandler, ErrorHandler, SerializerHandler):
+class TemplateHandler(PyoliteHandler, ErrorHandler, SerializerHandler):
     """ RequestHandler to CRUD template. """
 
     @negociate_content_type(['application/json'])

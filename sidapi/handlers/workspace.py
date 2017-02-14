@@ -5,37 +5,19 @@ from Gitolite configuration. """
 
 # Global imports
 from tornado.web import HTTPError
-from pyolite2 import RepositoryDuplicateError, Repository, FileError
+from pyolite2 import RepositoryDuplicateError, Repository
 
 # Local imports
 from sidapi import __projects_prefix__
-from .error import ErrorHandler
-from .serializer import SerializerHandler
+from sidapi.handlers.error import ErrorHandler
+from sidapi.handlers.serializer import SerializerHandler
+from sidapi.handlers.pyolite import PyoliteHandler
 from sidapi.decorators.content_negociation import negociate_content_type, accepted_content_type
 from sidapi.decorators.json_negociation import parse_json_body
-from sidapi.helpers import PyoliteRepository, GitRepositoryNotFound
 from sidapi.schemas import PROJECT_SCHEMA
 
-class WorkspaceHandler(ErrorHandler, SerializerHandler):
+class WorkspaceHandler(PyoliteHandler, ErrorHandler, SerializerHandler):
     """ This handler manage a workspace. """
-
-    def initialize(self, admin_config):
-        """ Initialize workspace handler. Storing admin_config path. """
-
-        self.pyolite = None
-        self.admin_config = admin_config
-
-    def prepare(self):
-        """ Prepare handler by instanciating and loading Gitolite configuration. """
-
-        try:
-            self.pyolite = PyoliteRepository(self.admin_config)
-            self.pyolite.load()
-        except (FileError, GitRepositoryNotFound):
-            raise HTTPError(
-                status_code=503,
-                log_message='Projects management temporary unavailable.'
-            )
 
     @negociate_content_type(['application/json'])
     def get(self):

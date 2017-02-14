@@ -11,16 +11,16 @@ from tornado.web import HTTPError
 from pyolite2 import RepositoryNotFoundError
 
 # Local imports
-from .. import __projects_prefix__
-from .error import ErrorHandler
-from .serializer import SerializerHandler
-from .workspace import WorkspaceHandler
-from ..helpers import PyoliteEncoder, patch_repo
+from sidapi import __projects_prefix__
+from sidapi.handlers.error import ErrorHandler
+from sidapi.handlers.serializer import SerializerHandler
+from sidapi.handlers.pyolite import PyoliteHandler
+from sidapi.helpers import PyoliteEncoder, patch_repo
 from sidapi.decorators.content_negociation import negociate_content_type, accepted_content_type
 from sidapi.decorators.json_negociation import parse_json_body
-from ..schemas import PROJECT_SCHEMA, PROJECT_PATCH_SCHEMA
+from sidapi.schemas import PROJECT_SCHEMA, PROJECT_PATCH_SCHEMA
 
-class ProjectHandler(WorkspaceHandler, ErrorHandler, SerializerHandler):
+class ProjectHandler(PyoliteHandler, ErrorHandler, SerializerHandler):
     """ Project handler """
 
     @negociate_content_type(['application/json'])
