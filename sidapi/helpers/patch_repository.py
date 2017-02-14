@@ -13,6 +13,7 @@ def patch_repo(repo, patches):
     for patch in patches:
         # Renaming a project is currently not implemented
         if patch['path'] == '/name' and patch['op'] == 'replace':
+            # TODO when implementing, don't forget to validate PROJECT_NAME
             raise HTTPError(
                 status_code=501,
                 log_message='Renaming a project is currently not implemented. '

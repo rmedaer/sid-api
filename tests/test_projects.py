@@ -124,7 +124,7 @@ def test_add_project(http_client, base_url):
             'Content-Type': 'application/json'
         },
         body=json.dumps({
-            "name": "A project",
+            "name": "my-new-project",
             "rules": [
                 {
                     "perm": "RW",

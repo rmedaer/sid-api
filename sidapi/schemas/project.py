@@ -2,11 +2,17 @@
 
 """ This module contains body schema for project management handlers. """
 
+PROJECT_NAME = {
+    "type": "string",
+    "minLength": 2,
+    "pattern": "^[A-Za-z0-9-_]*$"
+}
+
 PROJECT_SCHEMA = {
     "type": "object",
     "properties": {
         "name": {
-            "type": "string"
+            "$ref": "#/definitions/project-name"
         },
         "rules": {
             "type": "array",
@@ -35,7 +41,10 @@ PROJECT_SCHEMA = {
     "required": [
         "name"
     ],
-    "additionalProperties": False
+    "additionalProperties": False,
+    "definitions": {
+        "project-name": PROJECT_NAME
+    }
 }
 
 PROJECT_PATCH_SCHEMA = {

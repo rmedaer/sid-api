@@ -4,6 +4,7 @@
 from Gitolite configuration. """
 
 # Global imports
+from jsonpatch import make_patch
 from tornado.web import HTTPError
 from pyolite2 import RepositoryDuplicateError, Repository
 
@@ -15,6 +16,7 @@ from sidapi.handlers.pyolite import PyoliteHandler
 from sidapi.decorators.content_negociation import available_content_type, accepted_content_type
 from sidapi.decorators.json_negociation import parse_json_body
 from sidapi.schemas import PROJECT_SCHEMA
+from sidapi.helpers import PyoliteEncoder, patch_repo
 
 class ProjectCollectionHandler(PyoliteHandler, ErrorHandler, SerializerHandler):
     """ This handler manage a workspace. """
@@ -38,7 +40,8 @@ class ProjectCollectionHandler(PyoliteHandler, ErrorHandler, SerializerHandler):
             repo = Repository(__projects_prefix__ + kwargs['json']['name'])
             self.pyolite.repos.append(repo)
 
-            # TODO add default user permissions
+            # Add user permissions
+            patch_repo(repo, make_patch(PyoliteEncoder().default(repo), kwargs['json']))
         except RepositoryDuplicateError:
             raise HTTPError(
                 status_code=409,
