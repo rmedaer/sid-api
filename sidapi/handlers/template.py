@@ -39,13 +39,7 @@ class TemplateHandler(PyoliteHandler, ErrorHandler, SerializerHandler):
             )
 
         if output_content_type == 'application/json':
-            try:
-                self.write(repo)
-            except RepositoryNotFoundError:
-                raise HTTPError(
-                    status_code=404,
-                    log_message='Template not found.'
-                )
+            self.write(repo)
         elif output_content_type == 'application/schema+json':
             # TODO get template schema if available
             raise HTTPError(
