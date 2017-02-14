@@ -28,7 +28,6 @@ class PyoliteEncoder(JSONEncoder):
                 name=name,
                 rules=[dict(perm=rule.perm, users=rule)
                        for rule in obj.rules()]
-
             )
-        else:
+        else: # pragma: no cover
             return JSONEncoder.default(self, obj)

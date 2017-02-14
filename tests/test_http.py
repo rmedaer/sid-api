@@ -19,7 +19,7 @@ class TestHandler(ErrorHandler):
     """ Test handler. """
 
     @available_content_type(['application/json'])
-    def get(self):
+    def get(self, *args, **kwargs):
         self.write(json.dumps({
             'name': 'value'
         }))
@@ -38,7 +38,7 @@ class TestHandler(ErrorHandler):
         ],
         "additionalProperties": False
     })
-    def post(self):
+    def post(self, *args, **kwargs):
         self.write(json.dumps({
             'name': 'value'
         }))
@@ -48,22 +48,21 @@ class TestHandler(ErrorHandler):
     @parse_json_body({
         "type": "invalid"
     })
-    def put(self):
+    def put(self, *args, **kwargs):
         pass
 
 class InvalidContentTypeNegociation(ErrorHandler):
     """ Invalid handler. """
 
     @available_content_type([])
-    def get(self):
+    def get(self, *args, **kwargs):
         """ Using available_content_type decorator with empty parameter """
         pass
 
     @accepted_content_type([])
-    def post(self):
+    def post(self, *args, **kwargs):
         """ Using accepted_content_type decorator with empty parameter """
         pass
-
 
 @pytest.fixture
 def app():
