@@ -32,23 +32,22 @@ class WorkspaceHandler(PyoliteHandler, ErrorHandler, SerializerHandler):
     @parse_json_body(PROJECT_SCHEMA)
     def post(self, *args, **kwargs):
         """ Add a new project in the workspace. """
-         # pylint: disable=E1101
 
         try:
             # Create and add repository
-            repo = Repository(__projects_prefix__ + self.json['name'])
+            repo = Repository(__projects_prefix__ + kwargs['json']['name'])
             self.pyolite.repos.append(repo)
 
             # TODO add default user permissions
         except RepositoryDuplicateError:
             raise HTTPError(
                 status_code=409,
-                log_message='Repository \'%s\' already exists' % self.json['name']
+                log_message='Repository \'%s\' already exists' % kwargs['json']['name']
             )
 
         try:
             # Save Gitolite configuration and commit changes
-            self.pyolite.save('Created project \'%s\'' % self.json['name'])
+            self.pyolite.save('Created project \'%s\'' % kwargs['json']['name'])
         except IOError:
             raise HTTPError(
                 status_code=500,

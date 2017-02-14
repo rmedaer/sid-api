@@ -42,7 +42,7 @@ def parse_json_body(schema=None):
                     )
 
             # Set json to current object
-            args[0].json = data
+            kwargs['json'] = data
 
             # Execute function
             return func(*args, **kwargs)

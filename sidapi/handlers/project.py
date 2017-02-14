@@ -45,7 +45,7 @@ class ProjectHandler(PyoliteHandler, ErrorHandler, SerializerHandler):
                 log_message='Project not found.'
             )
 
-        patch_repo(repo, make_patch(PyoliteEncoder().default(repo), self.json)) # pylint: disable=E1101
+        patch_repo(repo, make_patch(PyoliteEncoder().default(repo), kwargs['json']))
 
         try:
             # Save Gitolite configuration and commit changes
@@ -71,7 +71,7 @@ class ProjectHandler(PyoliteHandler, ErrorHandler, SerializerHandler):
                 log_message='Project not found.'
             )
 
-        patch_repo(repo, self.json) # pylint: disable=E1101
+        patch_repo(repo, kwargs['json'])
 
         try:
             # Save Gitolite configuration and commit changes
