@@ -4,11 +4,11 @@
 from Gitolite configuration. """
 
 # Local imports
-from sidapi import __templates_prefix__
-from sidapi.handlers.error import ErrorHandler
-from sidapi.handlers.serializer import SerializerHandler
-from sidapi.handlers.pyolite import PyoliteHandler
-from sidapi.decorators.content_negociation import available_content_type
+from sid.api import __templates_prefix__
+from sid.api.handlers.error import ErrorHandler
+from sid.api.handlers.serializer import SerializerHandler
+from sid.api.handlers.pyolite import PyoliteHandler
+from sid.api.decorators.content_negociation import available_content_type
 
 class TemplateCollectionHandler(PyoliteHandler, ErrorHandler, SerializerHandler):
     """ This handler manage templates from Pyolite configuration. """

@@ -4,7 +4,7 @@
 
 import json
 from tornado.web import RequestHandler
-from sidapi.helpers import PyoliteEncoder
+from sid.lib import PyoliteEncoder
 
 class SerializerHandler(RequestHandler):
     """ This RequestHandler override `write` method to serialize known object into JSON """

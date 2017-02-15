@@ -9,7 +9,7 @@ import json
 import pytest
 
 from tornado.httpclient import HTTPRequest, HTTPError
-from sidapi.http_server import create_app
+from sid.api.http_server import create_app
 from .fixture import gitolite_fixture
 
 @pytest.fixture

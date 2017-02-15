@@ -5,8 +5,8 @@ a Pyolite configuration. """
 
 from tornado.web import HTTPError
 from pyolite2 import FileError
-from sidapi.helpers import PyoliteRepository, GitRepositoryNotFound
-from sidapi.handlers.error import ErrorHandler
+from sid.api.handlers.error import ErrorHandler
+from sid.lib import PyoliteRepository, GitRepositoryNotFound
 
 class PyoliteHandler(ErrorHandler):
     """ Abstract handler for Pyolite configuration. """

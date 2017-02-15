@@ -10,10 +10,10 @@ import pytest
 
 from tornado.httpclient import HTTPRequest, HTTPError
 from tornado.web import Application
-from sidapi.handlers.error import ErrorHandler
-from sidapi.handlers.default import DefaultHandler
-from sidapi.decorators.content_negociation import available_content_type, accepted_content_type
-from sidapi.decorators.json_negociation import parse_json_body
+from sid.api.handlers.error import ErrorHandler
+from sid.api.handlers.default import DefaultHandler
+from sid.api.decorators.content_negociation import available_content_type, accepted_content_type
+from sid.api.decorators.json_negociation import parse_json_body
 
 class TestHandler(ErrorHandler):
     """ Test handler. """

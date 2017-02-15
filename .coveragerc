@@ -1,6 +1,6 @@
 [run]
 branch = False
-omit = sidapi/__main__.py
+omit = sid/api/__main__.py
 
 [report]
 # Testing challenge !

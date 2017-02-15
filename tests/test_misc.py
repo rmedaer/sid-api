@@ -7,8 +7,8 @@ from urlparse import urljoin
 import json
 import pytest
 
-from sidapi import __version__
-from sidapi.http_server import create_app
+from sid.api import __version__
+from sid.api.http_server import create_app
 
 @pytest.fixture
 def app():

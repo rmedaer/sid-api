@@ -5,7 +5,7 @@ such as Pyolite classes """
 
 from json import JSONEncoder
 from pyolite2 import Repository
-from sidapi import __projects_prefix__, __templates_prefix__
+from sid.api import __projects_prefix__, __templates_prefix__
 
 class PyoliteEncoder(JSONEncoder):
     """ JSON encoder for Pyolite classes """

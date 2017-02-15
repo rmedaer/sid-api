@@ -2,7 +2,7 @@
 # Removed documentation to be more readable
 
 [MASTER]
-ignore=CVS
+ignore=CVS,docs
 persistent=yes
 load-plugins=
 jobs=1
