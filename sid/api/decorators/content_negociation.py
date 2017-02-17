@@ -72,7 +72,7 @@ def available_content_type(accepted):
             # If not any match found, return a unsupported media type error
             if not content_type:
                 raise HTTPError(
-                    status_code=415,
+                    status_code=406,
                     log_message='Content type negociation failed. '
                                 'Accepted media type are unsupported.'
                 )
