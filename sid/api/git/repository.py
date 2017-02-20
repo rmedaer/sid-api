@@ -75,7 +75,7 @@ class GitRepository(object):
         Keyword arguments:
         file -- A string which contains relative path of file to add.
         """
-        assert self.repo is not None
+        assert self.is_open()
 
         self.repo.index.add(self.resolve_path(file))
         self.repo.index.write()
@@ -99,7 +99,7 @@ class GitRepository(object):
         user -- Commit user (default: default_signature)
         parents -- Parent commits (default: HEAD)
         """
-        assert self.repo is not None
+        assert self.is_open()
 
         # Use default signature if user is not given
         if user is None:
@@ -124,7 +124,7 @@ class GitRepository(object):
         """
         Commit all changes. (see #commit())
         """
-        assert self.repo is not None
+        assert self.is_open()
 
         # Add all files
         self.repo.index.add_all()
@@ -141,7 +141,7 @@ class GitRepository(object):
 
         Throws GitRemoteNotFound: when remote doesn't exist.
         """
-        assert self.repo is not None
+        assert self.is_open()
 
         try:
             return self.repo.remotes[remote_name]
@@ -154,7 +154,7 @@ class GitRepository(object):
         url -- Remote URL.
         name -- Remote name (default: 'origin')
         """
-        assert self.repo is not None
+        assert self.is_open()
 
         try:
             return self.repo.create_remote(name, url)
@@ -165,7 +165,7 @@ class GitRepository(object):
         """
         Get branch from its name.
         """
-        assert self.repo is not None
+        assert self.is_open()
 
         branch = self.repo.lookup_branch(branch_name)
 
@@ -188,7 +188,7 @@ class GitRepository(object):
         remote_name -- Name of remote to pull.
         branch_name -- Name of remote branch to pull.
         """
-        assert self.repo is not None
+        assert self.is_open()
 
         # Get and fetch remote
         remote = self.get_remote(remote_name)
@@ -196,8 +196,11 @@ class GitRepository(object):
 
         # Lookup remote reference, oid and commit
         remote_ref = 'refs/remotes/%s/%s' % (remote_name, branch_name)
-        remote_oid = self.repo.lookup_reference(remote_ref).target
-        remote_commit = self.repo.get(remote_oid)
+        try:
+            remote_oid = self.repo.lookup_reference(remote_ref).target
+            remote_commit = self.repo.get(remote_oid)
+        except KeyError:
+            raise GitBranchNotFound()
 
         # Analyze which kind of merge we have to do during the pull
         merge_result, _ = self.repo.merge_analysis(remote_oid)
@@ -253,7 +256,7 @@ class GitRepository(object):
         Keyword arguments:
         file -- Path to be resolved
         """
-        assert self.repo is not None
+        assert self.is_open()
 
         if os.path.isabs(file):
             return os.path.relative(file, self.repo.workdir)
@@ -267,9 +270,15 @@ class GitRepository(object):
         Keyword arguments:
         oid -- Targeted OID.
         """
-        assert self.repo is not None
+        assert self.is_open()
 
         if isinstance(oid, basestring):
             oid = self.repo.lookup_reference(oid).target
 
         self.repo.reset(oid, GIT_RESET_HARD)
+
+    def is_open(self):
+        """
+        Return a boolean which define if repository is open or not.
+        """
+        return self.repo is not None

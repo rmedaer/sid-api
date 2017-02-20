@@ -6,16 +6,19 @@ This module contains the handler which manage templates.
 """
 
 # Global imports
-from tornado.web import HTTPError
+import os
+from tornado.web import HTTPError, RequestHandler
 from pyolite2 import RepositoryNotFoundError
 
 # Local imports
 from sid.api import __templates_prefix__, __public_key__
 from sid.api.auth import require_authentication
+from sid.api.auth.oauth_callback import OAuthCallback
 from sid.api.handlers.error import ErrorHandler
 from sid.api.handlers.serializer import SerializerHandler
 from sid.api.handlers.pyolite import PyoliteHandler
-from sid.api.http import available_content_type
+from sid.api.http import available_content_type, join_url_path
+from sid.api.cookiecutter import CookiecutterRepository
 
 class TemplateHandler(PyoliteHandler, ErrorHandler, SerializerHandler):
     """ RequestHandler to CRUD template. """
@@ -40,18 +43,28 @@ class TemplateHandler(PyoliteHandler, ErrorHandler, SerializerHandler):
                 log_message='Template not found.'
             )
 
+        # If user only need high level project configuration
+        # we can only return it, ...
         if output_content_type == 'application/json':
             self.write(repo)
-        elif output_content_type == 'application/schema+json':
-            # TODO get template schema if available
-            raise HTTPError(
-                status_code=501,
-                log_message='Currently not implemented.'
-            )
+            return
+
+        # ... otherwise we have to clone it
+        cookiecutter = CookiecutterRepository(
+            os.path.join(self.workspaces_dir, kwargs['auth']['mail'], __templates_prefix__, name),
+            join_url_path(self.remotes_url, __templates_prefix__, name)
+        )
+
+        # Set Pyolite credentials
+        cookiecutter.set_callbacks(OAuthCallback(kwargs['auth']['mail'], kwargs['bearer']))
+
+        cookiecutter.load()
+
+        # Set 'Content-Type' header according to Tinder process... 'It's a match !'
+        self.set_header('Content-Type', output_content_type)
+
+        if output_content_type == 'application/schema+json':
+            self.write(cookiecutter.get_schema())
 
         elif output_content_type == 'text/markdown':
-            # TODO get template documentation (README file)
-            raise HTTPError(
-                status_code=501,
-                log_message='Currently not implemented.'
-            )
+            RequestHandler.write(self, cookiecutter.get_readme())

@@ -4,24 +4,15 @@
 a Pyolite configuration. """
 
 import os
-import posixpath
-from urlparse import urlsplit, urlunsplit
-from sid.api import __public_key__
+from sid.api import __public_key__, __projects_prefix__
 from sid.api.auth import require_authentication
 from sid.api.auth.oauth_callback import OAuthCallback
 from sid.api.handlers.error import ErrorHandler
 from sid.api.handlers.workspace_handler import WorkspaceHandler
+from sid.api.http import join_url_path
 from sid.api.pyolite import PyoliteRepository
 
 ADMIN_REPOSITORY = 'gitolite-admin'
-
-def join_url_path(url, additional_path):
-    """
-    Join URL path with given one.
-    """
-    scheme, loc, path, query, fragments = urlsplit(url)
-    path = posixpath.join(path, additional_path)
-    return urlunsplit((scheme, loc, path, query, fragments))
 
 class PyoliteHandler(WorkspaceHandler, ErrorHandler):
     """ Abstract handler for Pyolite configuration. """
@@ -43,7 +34,7 @@ class PyoliteHandler(WorkspaceHandler, ErrorHandler):
 
         # Initialize Pyolite configuration object
         self.pyolite = PyoliteRepository(
-            os.path.join(self.workspaces_dir, kwargs['auth']['mail'], ADMIN_REPOSITORY),
+            os.path.join(self.workspaces_dir, kwargs['auth']['mail'], __projects_prefix__, ADMIN_REPOSITORY),
             join_url_path(self.remotes_url, ADMIN_REPOSITORY)
         )
 

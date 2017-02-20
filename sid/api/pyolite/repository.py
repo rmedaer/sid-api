@@ -11,7 +11,8 @@ from sid.api.git import (
     GitRepository,
     GitRepositoryNotFound,
     GitRemoteNotFound,
-    GitRemoteDuplicate
+    GitRemoteDuplicate,
+    GitBranchNotFound
 )
 from sid.api.pyolite.errors import GitPushForbidden
 
@@ -44,7 +45,10 @@ class PyoliteRepository(Pyolite, GitRepository):
             pass
 
         # Update our local copy
-        self.pull(REMOTE_NAME)
+        try:
+            self.pull(REMOTE_NAME)
+        except GitBranchNotFound:
+            raise AssertionError('Remote or local branch not found.')
 
         # Load Gitolite admin configuration
         Pyolite.load(self)
