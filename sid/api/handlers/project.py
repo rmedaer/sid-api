@@ -16,7 +16,7 @@ from sid.api.handlers.serializer import SerializerHandler
 from sid.api.handlers.pyolite import PyoliteHandler
 from sid.api.http import available_content_type, accepted_content_type, parse_json_body
 from sid.api.schemas import PROJECT_SCHEMA, PROJECT_PATCH_SCHEMA
-from sid.lib import PyoliteEncoder, patch_repo
+from sid.api.pyolite import PyoliteEncoder, patch_pyolite_repo
 
 class ProjectHandler(PyoliteHandler, ErrorHandler, SerializerHandler):
     """ Project handler """
@@ -45,7 +45,7 @@ class ProjectHandler(PyoliteHandler, ErrorHandler, SerializerHandler):
                 log_message='Project not found.'
             )
 
-        patch_repo(repo, make_patch(PyoliteEncoder().default(repo), kwargs['json']))
+        patch_pyolite_repo(repo, make_patch(PyoliteEncoder().default(repo), kwargs['json']))
 
         try:
             # Save Gitolite configuration and commit changes
@@ -77,7 +77,7 @@ class ProjectHandler(PyoliteHandler, ErrorHandler, SerializerHandler):
                 log_message='Project not found.'
             )
 
-        patch_repo(repo, kwargs['json'])
+        patch_pyolite_repo(repo, kwargs['json'])
 
         try:
             # Save Gitolite configuration and commit changes

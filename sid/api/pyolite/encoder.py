@@ -1,18 +1,23 @@
-# -*- coding: utf-8 -*-
-
-""" This module contains function and encoder to serialize known object
-such as Pyolite classes """
+"""
+This module contains a JSON serializer for Pyolite2 classes.
+"""
 
 from json import JSONEncoder
 from pyolite2 import Repository
 from sid.api import __projects_prefix__, __templates_prefix__
 
 class PyoliteEncoder(JSONEncoder):
-    """ JSON encoder for Pyolite classes """
+    """
+    JSON encoder for Pyolite classes.
+    """
 
-    def default(self, obj):
-        """ Default encoding method. """
-        # pylint: disable=E0202
+    def default(self, obj): # pylint: disable=E0202
+        """
+        Default encoding method.
+
+        Keyword arguments:
+        obj -- Object to serialize.
+        """
 
         if isinstance(obj, Repository):
             name = obj.name

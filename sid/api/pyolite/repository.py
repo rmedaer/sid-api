@@ -1,7 +1,7 @@
-# -*- coding: utf-8 -*-
-
-""" This module contains class which represent a Gitolite configuration
-under a Git repository. """
+"""
+This module contains a class which represent a Gitolite configuration
+under a Git repository. Mixing sid.api.git.GitRepository and pyolite2.Pyolite.
+"""
 
 import os
 import re
@@ -13,16 +13,11 @@ from sid.api.git import (
     GitRemoteNotFound,
     GitRemoteDuplicate
 )
+from sid.api.pyolite.errors import GitPushForbidden
 
 MAIN_CONFIG = 'conf/gitolite.conf'
 REMOTE_NAME = 'origin'
 FORBIDDEN_PATTERN = '^Remote error: FATAL: \S* any \S* \S* DENIED by fallthru'
-
-class GitPushForbidden(Exception):
-    """
-    Exception raised when user try to push changes and his access has been denied.
-    """
-    pass
 
 class PyoliteRepository(Pyolite, GitRepository):
     """ A Pyolite configuration under Git repository. """

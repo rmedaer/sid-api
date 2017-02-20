@@ -1,14 +1,19 @@
-# -*- coding: utf-8 -*-
-
-""" This module contains functions to patch a given repository with
-a JSON patch. """
+"""
+This module contains functions to easily manage Pyolite configurations.
+"""
 
 import re
 from tornado.web import HTTPError
 from pyolite2 import Rule
 
-def patch_repo(repo, patches):
-    """ Patch a repository with given JSON patch """
+def patch_pyolite_repo(repo, patches):
+    """
+    Patch a repository with given JSON patch.
+
+    Keyword arguments:
+    repo -- The repository to patch.
+    patches -- An array of JSON patches to be applied on given repository.
+    """
 
     for patch in patches:
         # Renaming a project is currently not implemented

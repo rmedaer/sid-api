@@ -17,7 +17,7 @@ from sid.api.handlers.serializer import SerializerHandler
 from sid.api.handlers.pyolite import PyoliteHandler
 from sid.api.http import available_content_type, accepted_content_type, parse_json_body
 from sid.api.schemas import PROJECT_SCHEMA
-from sid.lib import PyoliteEncoder, patch_repo, GitPushForbidden
+from sid.api.pyolite import PyoliteEncoder, patch_pyolite_repo, GitPushForbidden
 
 class ProjectCollectionHandler(PyoliteHandler, ErrorHandler, SerializerHandler):
     """ This handler manage a workspace. """
@@ -44,7 +44,7 @@ class ProjectCollectionHandler(PyoliteHandler, ErrorHandler, SerializerHandler):
             self.pyolite.repos.append(repo)
 
             # Add user permissions
-            patch_repo(repo, make_patch(PyoliteEncoder().default(repo), kwargs['json']))
+            patch_pyolite_repo(repo, make_patch(PyoliteEncoder().default(repo), kwargs['json']))
         except RepositoryDuplicateError:
             raise HTTPError(
                 status_code=409,

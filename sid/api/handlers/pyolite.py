@@ -11,7 +11,7 @@ from sid.api.auth import require_authentication
 from sid.api.auth.oauth_callback import OAuthCallback
 from sid.api.handlers.error import ErrorHandler
 from sid.api.handlers.workspace_handler import WorkspaceHandler
-from sid.lib import PyoliteRepository
+from sid.api.pyolite import PyoliteRepository
 
 ADMIN_REPOSITORY = 'gitolite-admin'
 

@@ -4,7 +4,7 @@ This handler returns always a "501 - Not implemented" error.
 """
 
 from tornado.web import HTTPError
-from .error import ErrorHandler
+from sid.api.handlers.error import ErrorHandler
 
 class NotImplementedHandler(ErrorHandler):
     """ Not implemented handler. See module documentation. """
