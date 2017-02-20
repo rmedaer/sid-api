@@ -39,7 +39,8 @@ PROJECT_SCHEMA = {
         }
     },
     "required": [
-        "name"
+        "name",
+        "rules"
     ],
     "additionalProperties": False,
     "definitions": {

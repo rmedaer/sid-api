@@ -4,15 +4,17 @@
 from Gitolite configuration. """
 
 # Local imports
-from sid.api import __templates_prefix__
+from sid.api import __templates_prefix__, __public_key__
+from sid.api.auth import require_authentication
 from sid.api.handlers.error import ErrorHandler
 from sid.api.handlers.serializer import SerializerHandler
 from sid.api.handlers.pyolite import PyoliteHandler
-from sid.api.decorators.content_negociation import available_content_type
+from sid.api.http import available_content_type
 
 class TemplateCollectionHandler(PyoliteHandler, ErrorHandler, SerializerHandler):
     """ This handler manage templates from Pyolite configuration. """
 
+    @require_authentication(__public_key__)
     @available_content_type(['application/json'])
     def get(self, *args, **kwargs):
         """ List available templates. """

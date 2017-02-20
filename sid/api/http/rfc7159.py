@@ -1,6 +1,9 @@
-# -*- coding: utf-8 -*-
-
-""" This module contains decorator which parse HTTP request body in JSON """
+"""
+This module contains decorator which parse JSON from HTTP request body.
+JSON is parsed according to RFC7159 with native Python library.
+JSON schema is used by 'jsonschema' library as described by Wright RFC draft
+(draft-wright-json-schema-XX).
+"""
 
 from json import loads
 from jsonschema import validate, ValidationError, SchemaError

@@ -1,7 +1,6 @@
-# -*- coding: utf-8 -*-
-# pylint: disable=C0103
-
 """ This module implements tests for HTTP requests and responses. """
+
+# pylint: disable=C0103
 
 from urlparse import urljoin
 
@@ -126,7 +125,7 @@ def test_invalid_accept_header(http_client, base_url):
 def test_asked_content_type_not_supported(http_client, base_url):
     """
     When client accepted content-type not allowed by server,
-    it should anwser with error 415.
+    it should anwser with error 406.
     """
 
     try:
@@ -138,7 +137,7 @@ def test_asked_content_type_not_supported(http_client, base_url):
         ))
         assert False
     except HTTPError as err:
-        assert err.code == 415
+        assert err.code == 406
 
 @pytest.mark.gen_test
 def test_missing_content_type(http_client, base_url):

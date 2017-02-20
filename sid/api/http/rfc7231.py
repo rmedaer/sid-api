@@ -1,6 +1,7 @@
-# -*- coding: utf-8 -*-
-
-""" This module contains decorators to manage content type negociation. """
+"""
+This module contains decorators which manage Content-Type negociation
+according to RFC7231 section 3.4 and 5.3.
+"""
 
 import mimeparse
 from tornado.web import HTTPError

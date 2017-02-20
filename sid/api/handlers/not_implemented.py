@@ -1,7 +1,5 @@
-# -*- coding: utf-8 -*-
-
-""" Not implemented handler
-
+"""
+Not implemented handler
 This handler returns always a "501 - Not implemented" error.
 """
 

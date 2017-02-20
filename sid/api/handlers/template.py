@@ -10,15 +10,17 @@ from tornado.web import HTTPError
 from pyolite2 import RepositoryNotFoundError
 
 # Local imports
-from sid.api import __templates_prefix__
+from sid.api import __templates_prefix__, __public_key__
+from sid.api.auth import require_authentication
 from sid.api.handlers.error import ErrorHandler
 from sid.api.handlers.serializer import SerializerHandler
 from sid.api.handlers.pyolite import PyoliteHandler
-from sid.api.decorators.content_negociation import available_content_type
+from sid.api.http import available_content_type
 
 class TemplateHandler(PyoliteHandler, ErrorHandler, SerializerHandler):
     """ RequestHandler to CRUD template. """
 
+    @require_authentication(__public_key__)
     @available_content_type([
         'text/markdown',
         'application/schema+json',

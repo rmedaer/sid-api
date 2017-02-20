@@ -1,7 +1,7 @@
-# -*- coding: utf-8 -*-
-
-""" This module contains handler which manage a project collection
-from Gitolite configuration. """
+"""
+This module contains handler which manage a project collection
+from Gitolite configuration.
+"""
 
 # Global imports
 from jsonpatch import make_patch
@@ -10,17 +10,19 @@ from pyolite2 import RepositoryDuplicateError, Repository
 
 # Local imports
 from sid.api import __projects_prefix__
+from sid.api import __public_key__
+from sid.api.auth import require_authentication
 from sid.api.handlers.error import ErrorHandler
 from sid.api.handlers.serializer import SerializerHandler
 from sid.api.handlers.pyolite import PyoliteHandler
-from sid.api.decorators.content_negociation import available_content_type, accepted_content_type
-from sid.api.decorators.json_negociation import parse_json_body
+from sid.api.http import available_content_type, accepted_content_type, parse_json_body
 from sid.api.schemas import PROJECT_SCHEMA
-from sid.lib import PyoliteEncoder, patch_repo
+from sid.lib import PyoliteEncoder, patch_repo, GitPushForbidden
 
 class ProjectCollectionHandler(PyoliteHandler, ErrorHandler, SerializerHandler):
     """ This handler manage a workspace. """
 
+    @require_authentication(__public_key__)
     @available_content_type(['application/json'])
     def get(self, *args, **kwargs):
         """ List available projects within this workspace. """
@@ -29,6 +31,7 @@ class ProjectCollectionHandler(PyoliteHandler, ErrorHandler, SerializerHandler):
                     for project in self.pyolite.repos
                     if project.name.startswith(__projects_prefix__)])
 
+    @require_authentication(__public_key__)
     @accepted_content_type(['application/json'])
     @available_content_type(['application/json'])
     @parse_json_body(PROJECT_SCHEMA)
@@ -51,6 +54,11 @@ class ProjectCollectionHandler(PyoliteHandler, ErrorHandler, SerializerHandler):
         try:
             # Save Gitolite configuration and commit changes
             self.pyolite.save('Created project \'%s\'' % kwargs['json']['name'])
+        except GitPushForbidden:
+            raise HTTPError(
+                status_code=403,
+                log_message='You are not authorized to create projects'
+            )
         except IOError:
             raise HTTPError(
                 status_code=500,
