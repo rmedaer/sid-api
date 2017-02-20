@@ -1,8 +1,5 @@
-# -*- coding: utf-8 -*-
-
-""" Template handler
-
-This module contains the handler which manage templates.
+"""
+This module contains the handler which retrieve template information.
 """
 
 # Global imports
@@ -14,14 +11,36 @@ from pyolite2 import RepositoryNotFoundError
 from sid.api import __templates_prefix__, __public_key__
 from sid.api.auth import require_authentication
 from sid.api.auth.oauth_callback import OAuthCallback
+from sid.api.handlers.cookiecutter import CookiecutterHandler
 from sid.api.handlers.error import ErrorHandler
 from sid.api.handlers.serializer import SerializerHandler
 from sid.api.handlers.pyolite import PyoliteHandler
 from sid.api.http import available_content_type, join_url_path
 from sid.api.cookiecutter import CookiecutterRepository
 
-class TemplateHandler(PyoliteHandler, ErrorHandler, SerializerHandler):
-    """ RequestHandler to CRUD template. """
+class TemplateHandler(
+        CookiecutterHandler,
+        PyoliteHandler,
+        ErrorHandler,
+        SerializerHandler
+    ):
+    """
+    RequestHandler to CRUD template.
+    """
+
+    def initialize(self, workspaces_dir, remotes_url):
+        """
+        Initialize each parent handler.
+        """
+        CookiecutterHandler.initialize(self, workspaces_dir, remotes_url)
+        PyoliteHandler.initialize(self, workspaces_dir, remotes_url)
+
+    def prepare(self, *args, **kwargs):
+        """
+        Prepare each parent handler.
+        """
+        CookiecutterHandler.prepare(self, self.path_args[0], *args, **kwargs)
+        PyoliteHandler.prepare(self, *args, **kwargs)
 
     @require_authentication(__public_key__)
     @available_content_type([
@@ -43,28 +62,14 @@ class TemplateHandler(PyoliteHandler, ErrorHandler, SerializerHandler):
                 log_message='Template not found.'
             )
 
-        # If user only need high level project configuration
-        # we can only return it, ...
-        if output_content_type == 'application/json':
-            self.write(repo)
-            return
-
-        # ... otherwise we have to clone it
-        cookiecutter = CookiecutterRepository(
-            os.path.join(self.workspaces_dir, kwargs['auth']['mail'], __templates_prefix__, name),
-            join_url_path(self.remotes_url, __templates_prefix__, name)
-        )
-
-        # Set Pyolite credentials
-        cookiecutter.set_callbacks(OAuthCallback(kwargs['auth']['mail'], kwargs['bearer']))
-
-        cookiecutter.load()
-
         # Set 'Content-Type' header according to Tinder process... 'It's a match !'
         self.set_header('Content-Type', output_content_type)
 
-        if output_content_type == 'application/schema+json':
-            self.write(cookiecutter.get_schema())
+        if output_content_type == 'application/json':
+            self.write(repo)
+
+        elif output_content_type == 'application/schema+json':
+            self.write(self.cookiecutter.get_schema())
 
         elif output_content_type == 'text/markdown':
-            RequestHandler.write(self, cookiecutter.get_readme())
+            RequestHandler.write(self, self.cookiecutter.get_readme())

@@ -6,7 +6,6 @@ under a Git repository. Mixing sid.api.git.GitRepository and pyolite2.Pyolite.
 import os
 import re
 from pyolite2 import Pyolite
-from pygit2 import GitError
 from sid.api.git import (
     GitRepository,
     GitRepositoryNotFound,
@@ -14,11 +13,9 @@ from sid.api.git import (
     GitRemoteDuplicate,
     GitBranchNotFound
 )
-from sid.api.pyolite.errors import GitPushForbidden
 
 MAIN_CONFIG = 'conf/gitolite.conf'
 REMOTE_NAME = 'origin'
-FORBIDDEN_PATTERN = '^Remote error: FATAL: \S* any \S* \S* DENIED by fallthru'
 
 class PyoliteRepository(Pyolite, GitRepository):
     """ A Pyolite configuration under Git repository. """
@@ -64,15 +61,3 @@ class PyoliteRepository(Pyolite, GitRepository):
 
         # Push to remote
         self.push(REMOTE_NAME)
-
-    def push(self, remote_name='origin', branch_name='master'):
-        try:
-            super(PyoliteRepository, self).push(remote_name, branch_name)
-        except GitError as gerr:
-            if re.match(FORBIDDEN_PATTERN, gerr.message):
-                # Automatically discard changes by fetching changes
-                self.reset_hard('refs/remotes/%s/%s' % (remote_name, branch_name))
-
-                raise GitPushForbidden()
-            else:
-                raise gerr

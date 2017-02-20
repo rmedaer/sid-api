@@ -3,8 +3,10 @@ This module contains GitRepository class. It exposes usual commands on Git
 repository with pygit2 library.
 """
 
+import re
 from pygit2 import ( # pylint: disable=E0611
     Repository,
+    GitError,
     discover_repository,
     init_repository,
     GIT_MERGE_ANALYSIS_UP_TO_DATE,
@@ -12,30 +14,17 @@ from pygit2 import ( # pylint: disable=E0611
     GIT_MERGE_ANALYSIS_NORMAL,
     GIT_RESET_HARD
 )
+from sid.api.git.errors import (
+    GitForbidden,
+    GitPushForbidden,
+    GitPullForbidden,
+    GitRepositoryNotFound,
+    GitRemoteNotFound,
+    GitBranchNotFound,
+    GitRemoteDuplicate
+)
 
-class GitRepositoryNotFound(Exception):
-    """
-    Exception raised when Git repository doesn't exist.
-    """
-    pass
-
-class GitRemoteNotFound(Exception):
-    """
-    Exception raised when Git remote doesn't exist.
-    """
-    pass
-
-class GitBranchNotFound(Exception):
-    """
-    Exception raised when Git branch doesn't exist.
-    """
-    pass
-
-class GitRemoteDuplicate(Exception):
-    """
-    Exception raised when user try to create a remote which already exists.
-    """
-    pass
+FORBIDDEN_PATTERN = '^Remote error: FATAL: \S* any \S* \S* DENIED by fallthru'
 
 class GitRepository(object):
     """
@@ -190,9 +179,15 @@ class GitRepository(object):
         """
         assert self.is_open()
 
-        # Get and fetch remote
+        # Retrieve and fetch remote
         remote = self.get_remote(remote_name)
-        remote.fetch(callbacks=self.callbacks)
+        try:
+            remote.fetch(callbacks=self.callbacks)
+        except GitError as gerr:
+            if re.match(FORBIDDEN_PATTERN, gerr.message):
+                raise GitPullForbidden()
+            else:
+                raise gerr
 
         # Lookup remote reference, oid and commit
         remote_ref = 'refs/remotes/%s/%s' % (remote_name, branch_name)
@@ -240,7 +235,16 @@ class GitRepository(object):
         branch_name -- Branch to be pushed.
         """
         remote = self.get_remote(remote_name)
-        remote.push([self.get_branch(branch_name).name], callbacks=self.callbacks)
+        try:
+            remote.push([self.get_branch(branch_name).name], callbacks=self.callbacks)
+        except GitError as gerr:
+            if re.match(FORBIDDEN_PATTERN, gerr.message):
+                # Automatically discard changes by fetching changes
+                self.reset_hard('refs/remotes/%s/%s' % (remote_name, branch_name))
+
+                raise GitPushForbidden()
+            else:
+                raise gerr
 
     def set_callbacks(self, callbacks):
         """

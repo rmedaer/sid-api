@@ -9,15 +9,15 @@ from tornado.web import HTTPError
 from pyolite2 import RepositoryDuplicateError, Repository
 
 # Local imports
-from sid.api import __projects_prefix__
-from sid.api import __public_key__
+from sid.api import __projects_prefix__, __public_key__
 from sid.api.auth import require_authentication
 from sid.api.handlers.error import ErrorHandler
 from sid.api.handlers.serializer import SerializerHandler
 from sid.api.handlers.pyolite import PyoliteHandler
 from sid.api.http import available_content_type, accepted_content_type, parse_json_body
 from sid.api.schemas import PROJECT_SCHEMA
-from sid.api.pyolite import PyoliteEncoder, patch_pyolite_repo, GitPushForbidden
+from sid.api.pyolite import PyoliteEncoder, patch_pyolite_repo
+from sid.api.git import GitPushForbidden
 
 class ProjectCollectionHandler(PyoliteHandler, ErrorHandler, SerializerHandler):
     """ This handler manage a workspace. """
