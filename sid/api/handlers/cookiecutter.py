@@ -12,7 +12,7 @@ from sid.api.cookiecutter import CookiecutterRepository
 from sid.api.handlers.error import ErrorHandler
 from sid.api.handlers.workspace_handler import WorkspaceHandler
 from sid.api.http import join_url_path
-from sid.api.git import GitPullForbidden
+from sid.api.git import GitForbidden
 
 class CookiecutterHandler(WorkspaceHandler, ErrorHandler):
     """
@@ -47,7 +47,7 @@ class CookiecutterHandler(WorkspaceHandler, ErrorHandler):
         self.cookiecutter.set_callbacks(OAuthCallback(kwargs['auth']['mail'], kwargs['bearer']))
         try:
             self.cookiecutter.load()
-        except GitPullForbidden:
+        except GitForbidden:
             raise HTTPError(
                 status_code=403,
                 log_message='You are not authorize to use this template'

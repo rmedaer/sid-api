@@ -4,6 +4,7 @@ This module contains an abstraction of Cookiecutter repository.
 
 import os
 import json
+from cookiecutter.main import cookiecutter
 from sid.api.git import (
     GitRepository,
     GitRepositoryNotFound,
@@ -28,7 +29,6 @@ class CookiecutterRepository(GitRepository):
         GitRepository.__init__(self, path)
         self.origin = origin
 
-
     def load(self):
         # Try to open Git repository
         try:
@@ -47,6 +47,14 @@ class CookiecutterRepository(GitRepository):
             self.pull(REMOTE_NAME)
         except GitBranchNotFound:
             raise AssertionError('Remote or local branch not found.')
+
+    # def apply(self, path, settings={}):
+    #     """
+    #     Apply this template to given path.
+    #     """
+    #     assert self.is_open()
+    #
+    #     cookiecutter(self.path)
 
     def get_schema(self):
         """

@@ -3,7 +3,6 @@ This module contains GitRepository class. It exposes usual commands on Git
 repository with pygit2 library.
 """
 
-import re
 from pygit2 import ( # pylint: disable=E0611
     Repository,
     GitError,
@@ -16,15 +15,12 @@ from pygit2 import ( # pylint: disable=E0611
 )
 from sid.api.git.errors import (
     GitForbidden,
-    GitPushForbidden,
-    GitPullForbidden,
     GitRepositoryNotFound,
     GitRemoteNotFound,
     GitBranchNotFound,
-    GitRemoteDuplicate
+    GitRemoteDuplicate,
+    handle_git_error
 )
-
-FORBIDDEN_PATTERN = '^Remote error: FATAL: \S* any \S* \S* DENIED by fallthru'
 
 class GitRepository(object):
     """
@@ -184,10 +180,7 @@ class GitRepository(object):
         try:
             remote.fetch(callbacks=self.callbacks)
         except GitError as gerr:
-            if re.match(FORBIDDEN_PATTERN, gerr.message):
-                raise GitPullForbidden()
-            else:
-                raise gerr
+            raise handle_git_error(gerr)
 
         # Lookup remote reference, oid and commit
         remote_ref = 'refs/remotes/%s/%s' % (remote_name, branch_name)
@@ -238,13 +231,13 @@ class GitRepository(object):
         try:
             remote.push([self.get_branch(branch_name).name], callbacks=self.callbacks)
         except GitError as gerr:
-            if re.match(FORBIDDEN_PATTERN, gerr.message):
+            err = handle_git_error(gerr)
+
+            if isinstance(gerr, GitForbidden):
                 # Automatically discard changes by fetching changes
                 self.reset_hard('refs/remotes/%s/%s' % (remote_name, branch_name))
 
-                raise GitPushForbidden()
-            else:
-                raise gerr
+            raise err
 
     def set_callbacks(self, callbacks):
         """

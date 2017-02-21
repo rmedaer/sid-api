@@ -12,10 +12,11 @@ from sid.api import __templates_prefix__, __public_key__
 from sid.api.auth import require_authentication
 from sid.api.auth.oauth_callback import OAuthCallback
 from sid.api.cookiecutter import CookiecutterRepository
+from sid.api.git import GitForbidden
 from sid.api.handlers.cookiecutter import CookiecutterHandler
 from sid.api.handlers.error import ErrorHandler
 from sid.api.handlers.serializer import SerializerHandler
-from sid.api.handlers.pyolite import PyoliteHandler
+from sid.api.handlers.workspace_handler import WorkspaceHandler
 from sid.api.http import (
     available_content_type,
     accepted_content_type,
@@ -24,31 +25,35 @@ from sid.api.http import (
 )
 
 class ProjectTemplateHandler(
-        CookiecutterHandler,
-        PyoliteHandler,
+        WorkspaceHandler,
         ErrorHandler,
         SerializerHandler
     ):
     """
-    RequestHandler to CRUD template.
     """
 
-    def initialize(self, workspaces_dir, remotes_url):
-        """
-        Initialize each parent handler.
-        """
-        CookiecutterHandler.initialize(self, workspaces_dir, remotes_url)
-        PyoliteHandler.initialize(self, workspaces_dir, remotes_url)
-
     @require_authentication(__public_key__)
-    def prepare(self, *args, **kwargs):
-        """
-        Prepare each parent handler.
-        """
-        PyoliteHandler.prepare(self, *args, **kwargs)
-
     @accepted_content_type(['application/json'])
     @available_content_type(['application/json'])
     @parse_json_body()
     def post(self, project_name, *args, **kwargs):
-        CookiecutterHandler.prepare(self, kwargs['json']['name'], *args, **kwargs)
+        template_name = json['name']
+
+        # Initialize template repository
+        template = CookiecutterRepository(
+            os.path.join(self.workspaces_dir, kwargs['auth']['mail'], __templates_prefix__, template_name),
+            join_url_path(self.remotes_url, __templates_prefix__, template_name)
+        )
+
+        # Load Cookiecutter repository
+        template.set_callbacks(OAuthCallback(kwargs['auth']['mail'], kwargs['bearer']))
+        try:
+            template.load()
+        except GitForbidden:
+            raise HTTPError(
+                status_code=403,
+                log_message='You are not authorize to use this template'
+            )
+
+        # Apply it to our repository
+        # template.apply(os.path.join(self.workspaces_dir, kwargs['auth']['mail'], __templates_prefix__, project_name))

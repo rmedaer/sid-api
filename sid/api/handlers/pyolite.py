@@ -4,12 +4,15 @@
 a Pyolite configuration. """
 
 import os
+from tornado.web import HTTPError
+
 from sid.api import __public_key__, __projects_prefix__
 from sid.api.auth import require_authentication
 from sid.api.auth.oauth_callback import OAuthCallback
 from sid.api.handlers.error import ErrorHandler
 from sid.api.handlers.workspace_handler import WorkspaceHandler
 from sid.api.http import join_url_path
+from sid.api.git import GitForbidden
 from sid.api.pyolite import PyoliteRepository
 
 ADMIN_REPOSITORY = 'gitolite-admin'
@@ -42,4 +45,10 @@ class PyoliteHandler(WorkspaceHandler, ErrorHandler):
         self.pyolite.set_callbacks(OAuthCallback(kwargs['auth']['mail'], kwargs['bearer']))
 
         # Load Pyolite repository
-        self.pyolite.load()
+        try:
+            self.pyolite.load()
+        except GitForbidden:
+            raise HTTPError(
+                status_code=401,
+                log_message='You\'re not authorized to access this resource.'
+            )

@@ -7,8 +7,6 @@ from repository import (
 )
 from sid.api.git.errors import (
     GitForbidden,
-    GitPushForbidden,
-    GitPullForbidden,
     GitRepositoryNotFound,
     GitRemoteNotFound,
     GitBranchNotFound,

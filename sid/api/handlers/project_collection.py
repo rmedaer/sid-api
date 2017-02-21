@@ -17,7 +17,7 @@ from sid.api.handlers.pyolite import PyoliteHandler
 from sid.api.http import available_content_type, accepted_content_type, parse_json_body
 from sid.api.schemas import PROJECT_SCHEMA
 from sid.api.pyolite import PyoliteEncoder, patch_pyolite_repo
-from sid.api.git import GitPushForbidden
+from sid.api.git import GitForbidden
 
 class ProjectCollectionHandler(PyoliteHandler, ErrorHandler, SerializerHandler):
     """ This handler manage a workspace. """
@@ -54,7 +54,7 @@ class ProjectCollectionHandler(PyoliteHandler, ErrorHandler, SerializerHandler):
         try:
             # Save Gitolite configuration and commit changes
             self.pyolite.save('Created project \'%s\'' % kwargs['json']['name'])
-        except GitPushForbidden:
+        except GitForbidden:
             raise HTTPError(
                 status_code=403,
                 log_message='You are not authorized to create projects'
