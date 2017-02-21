@@ -15,42 +15,20 @@ from sid.api.git import (
 )
 
 MAIN_CONFIG = 'conf/gitolite.conf'
-REMOTE_NAME = 'origin'
 
 class PyoliteRepository(Pyolite, GitRepository):
     """ A Pyolite configuration under Git repository. """
 
-    def __init__(self, path, origin):
+    def __init__(self, path):
         """ Initialize our Pyolite repository. Open its Git repository. """
-
-        self.origin = origin
-
         GitRepository.__init__(self, path)
         Pyolite.__init__(self, os.path.join(path, MAIN_CONFIG))
 
     def load(self):
-        # Try to open Git repository
-        try:
-            GitRepository.open(self)
-        except GitRepositoryNotFound:
-            GitRepository.initialize(self)
-
-        # Check if remote exists or create it
-        try:
-            GitRepository.create_remote(self, self.origin, REMOTE_NAME)
-        except GitRemoteDuplicate:
-            pass
-
-        # Update our local copy
-        try:
-            self.pull(REMOTE_NAME)
-        except GitBranchNotFound:
-            raise AssertionError('Remote or local branch not found.')
-
         # Load Gitolite admin configuration
         Pyolite.load(self)
 
-    def save(self, message):
+    def save(self, message, remote='origin'):
         """ Save Gitolite configuration and commit changes. """
 
         # Save Gitolite configuration
@@ -60,4 +38,4 @@ class PyoliteRepository(Pyolite, GitRepository):
         self.commit_all(message)
 
         # Push to remote
-        self.push(REMOTE_NAME)
+        self.push(remote)

@@ -1,5 +1,5 @@
 """
-Project(s) handlers
+Project handler
 This module contains every handlers for project management.
 """
 
@@ -9,21 +9,44 @@ from tornado.web import HTTPError
 from pyolite2 import RepositoryNotFoundError
 
 # Local imports
+import sid.api.http as http
+import sid.api.auth as auth
 from sid.api import __projects_prefix__, __public_key__
-from sid.api.auth import require_authentication
-from sid.api.handlers.error import ErrorHandler
-from sid.api.handlers.serializer import SerializerHandler
-from sid.api.handlers.pyolite import PyoliteHandler
-from sid.api.http import available_content_type, accepted_content_type, parse_json_body
+from sid.api.git import GitForbidden
 from sid.api.schemas import PROJECT_SCHEMA, PROJECT_PATCH_SCHEMA
-from sid.api.pyolite import PyoliteEncoder, patch_pyolite_repo
+from sid.api.handlers.workspace import WorkspaceHandler
+from sid.api.pyolite import patch_pyolite_repo
 
-class ProjectHandler(PyoliteHandler, ErrorHandler, SerializerHandler):
-    """ Project handler """
+@http.json_error_handling
+@http.json_serializer
+class ProjectHandler(WorkspaceHandler):
+    """
+    This handler process following routes:
 
-    @require_authentication(__public_key__)
-    @available_content_type(['application/json'])
+        - GET    /projects/<project_name> -- Get project information
+        - PUT    /projects/<project_name> -- Update a given project
+        - DELETE /projects/<project_name> -- Remove a given project
+        - PATCH  /projects/<project_name> -- Patch a given project
+    """
+
+    def prepare(self, *args, **kwargs):
+        """
+        Prepare user's workspace and Pyolite configuration to manage projects.
+        """
+        super(ProjectHandler, self).prepare()
+        self.pyolite = self.prepare_pyolite()
+
+    @auth.require_authentication(__public_key__)
+    @http.available_content_type(['application/json'])
     def get(self, name, *args, **kwargs):
+        """
+        Get project information from its name.
+
+        Example:
+        > GET /projects/example HTTP/1.1
+        > Accept: */*
+        >
+        """
         try:
             self.write(self.pyolite.repos[__projects_prefix__ + name])
         except RepositoryNotFoundError:
@@ -32,11 +55,22 @@ class ProjectHandler(PyoliteHandler, ErrorHandler, SerializerHandler):
                 log_message='Project not found.'
             )
 
-    @require_authentication(__public_key__)
-    @available_content_type(['application/json'])
-    @accepted_content_type(['application/json'])
-    @parse_json_body(PROJECT_SCHEMA)
+    @auth.require_authentication(__public_key__)
+    @http.available_content_type(['application/json'])
+    @http.accepted_content_type(['application/json'])
+    @http.parse_json_body(PROJECT_SCHEMA)
     def put(self, name, *args, **kwargs):
+        """
+        Modify a given project.
+
+        Example:
+        > PUT /projects/example HTTP/1.1
+        > Accept: */*
+        > Content-Type: application/json
+        > Content-Length: 59
+        >
+        {"name":"example","rules":[{"users":["@all"],"perm":"RW"}]}
+        """
         try:
             repo = self.pyolite.repos[__projects_prefix__ + name]
         except RepositoryNotFoundError:
@@ -45,12 +79,24 @@ class ProjectHandler(PyoliteHandler, ErrorHandler, SerializerHandler):
                 log_message='Project not found.'
             )
 
-        patch_pyolite_repo(repo, make_patch(PyoliteEncoder().default(repo), kwargs['json']))
+        # Generate patch/diff between existing repo and request body
+        patches = make_patch(http.Encoder().default(repo), kwargs['json'])
 
+        # Skip if nothing changed
+        if not patches:
+            self.write(repo)
+            return
+
+        # Patch the diff
+        patch_pyolite_repo(
+            repo,
+            patches
+        )
+
+        # Save Gitolite configuration and commit changes
         try:
-            # Save Gitolite configuration and commit changes
             self.pyolite.save('Updated project \'%s\'' % name)
-        except GitPushForbidden:
+        except GitForbidden:
             raise HTTPError(
                 status_code=403,
                 log_message='You are not authorized to update this project\'s configuration'
@@ -64,11 +110,24 @@ class ProjectHandler(PyoliteHandler, ErrorHandler, SerializerHandler):
         # Return updated repository
         self.write(repo)
 
-    @require_authentication(__public_key__)
-    @available_content_type(['application/json'])
-    @accepted_content_type(['application/json'])
-    @parse_json_body(PROJECT_PATCH_SCHEMA)
+    @auth.require_authentication(__public_key__)
+    @http.available_content_type(['application/json'])
+    @http.accepted_content_type(['application/json'])
+    @http.parse_json_body(PROJECT_PATCH_SCHEMA)
     def patch(self, name, *args, **kwargs):
+        """
+        Modify a given project from a JSON diff/patch.
+
+        Example:
+        > PATCH /projects/example HTTP/1.1
+        > Accept: */*
+        > Content-Type: application/json
+        > Content-Length: 65
+        >
+        [{"op":"replace","path":"/rules/0","value":{"perm":"RW","users":["@all"]}}]
+        """
+        patches = kwargs['json']
+
         try:
             repo = self.pyolite.repos[__projects_prefix__ + name]
         except RepositoryNotFoundError:
@@ -77,12 +136,17 @@ class ProjectHandler(PyoliteHandler, ErrorHandler, SerializerHandler):
                 log_message='Project not found.'
             )
 
-        patch_pyolite_repo(repo, kwargs['json'])
+        # Skip if patch is empty
+        if not patches:
+            self.write(repo)
+            return
+
+        patch_pyolite_repo(repo, patches)
 
         try:
             # Save Gitolite configuration and commit changes
             self.pyolite.save('Updated project \'%s\'' % name)
-        except GitPushForbidden:
+        except GitForbidden:
             raise HTTPError(
                 status_code=403,
                 log_message='You are not authorized to patch project\'s configuration'
@@ -96,8 +160,18 @@ class ProjectHandler(PyoliteHandler, ErrorHandler, SerializerHandler):
         # Return updated repository
         self.write(repo)
 
-    @require_authentication(__public_key__)
+    @auth.require_authentication(__public_key__)
     def delete(self, name, *args, **kwargs):
+        """
+        Delete a project.
+
+        Example:
+        > delete /projects/example HTTP/1.1
+        > Accept: */*
+        >
+
+        NOTE: My editor syntax is bugging when I write "delete" in caps... :-(
+        """
         try:
             self.pyolite.repos.remove(__projects_prefix__ + name)
         except RepositoryNotFoundError:
@@ -109,7 +183,7 @@ class ProjectHandler(PyoliteHandler, ErrorHandler, SerializerHandler):
         try:
             # Save Gitolite configuration and commit changes
             self.pyolite.save('Removed project \'%s\'' % name)
-        except GitPushForbidden:
+        except GitForbidden:
             raise HTTPError(
                 status_code=403,
                 log_message='You are not authorized to remove this project'

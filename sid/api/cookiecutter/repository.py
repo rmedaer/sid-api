@@ -4,7 +4,11 @@ This module contains an abstraction of Cookiecutter repository.
 
 import os
 import json
+from tornado.web import HTTPError
 from cookiecutter.main import cookiecutter
+from cookiecutter.exceptions import (
+    NonTemplatedInputDirException
+)
 from sid.api.git import (
     GitRepository,
     GitRepositoryNotFound,
@@ -12,7 +16,6 @@ from sid.api.git import (
     GitBranchNotFound
 )
 
-REMOTE_NAME = 'origin'
 VARS_FILE = 'cookiecutter.json'
 README_FILE = 'README.md'
 
@@ -21,40 +24,34 @@ class CookiecutterRepository(GitRepository):
     This class represents a Cookiecutter template behind a Git repository.
     """
 
-    def __init__(self, path, origin):
+    def __init__(self, path):
         """
         Initialize our Cookiecutter repository.
         """
-
         GitRepository.__init__(self, path)
-        self.origin = origin
 
-    def load(self):
-        # Try to open Git repository
+    def apply(self, dst_path, settings={}):
+        """
+        Apply this template to given path.
+        """
+        assert self.is_open()
+
         try:
-            self.open()
-        except GitRepositoryNotFound:
-            self.initialize()
-
-        # Check if remote exists or create it
-        try:
-            GitRepository.create_remote(self, self.origin, REMOTE_NAME)
-        except GitRemoteDuplicate:
-            pass
-
-        # Update our local copy
-        try:
-            self.pull(REMOTE_NAME)
-        except GitBranchNotFound:
-            raise AssertionError('Remote or local branch not found.')
-
-    # def apply(self, path, settings={}):
-    #     """
-    #     Apply this template to given path.
-    #     """
-    #     assert self.is_open()
-    #
-    #     cookiecutter(self.path)
+            cookiecutter(
+                self.path,
+                no_input=True,
+                extra_context={}, # TODO give extra variables
+                replay=False,
+                overwrite_if_exists=True,
+                output_dir=dst_path,
+                strip=True
+            )
+        except NonTemplatedInputDirException as err:
+            raise HTTPError(
+                status_code=503,
+                log_message='Malformed template directory: %s. '
+                            'Please contact your system administrator.' % err.__class__.__name__
+            )
 
     def get_schema(self):
         """
@@ -69,12 +66,20 @@ class CookiecutterRepository(GitRepository):
         try:
             file = open(os.path.join(self.path, VARS_FILE), 'r')
         except IOError:
-            # TODO Should be replaced by 503 Service Unavailable
-            raise AssertionError('Unable to read template vars file: %s' % VARS_FILE)
+            raise HTTPError(
+                status_code=503,
+                log_message='Unable to read template file: %s. '
+                            'Please contact your system administrator.' % VARS_FILE
+            )
+
 
         rc = json.loads(file.read())
         if not isinstance(rc, dict):
-            raise AssertionError('Unrecognized %s format' % VARS_FILE)
+            raise HTTPError(
+                status_code=503,
+                log_message='Unrecognized %s format. '
+                            'Please contact your system administrator.' % VARS_FILE
+            )
 
         schema = {
             'properties': {},
@@ -97,7 +102,10 @@ class CookiecutterRepository(GitRepository):
         try:
             file = open(os.path.join(self.path, README_FILE), 'r')
         except IOError:
-            # TODO Should be replaced by 503 Service Unavailable
-            raise AssertionError('Unable to read template README: %s' % README_FILE)
+            raise HTTPError(
+                status_code=503,
+                log_message='Unable to read template README  (%s). '
+                            'Please contact your system administrator.' % README_FILE
+            )
 
         return file.read()

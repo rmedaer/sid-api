@@ -78,7 +78,12 @@ def available_content_type(accepted):
                                 'Accepted media type are unsupported.'
                 )
 
+            # Set up "output" content-type in keyword arguments
             kwargs['output_content_type'] = content_type
+
+            # Set 'Content-Type' header according to Tinder process... 'It's a match !'
+            args[0].set_header('Content-Type', content_type)
+
             return func(*args, **kwargs)
         return wrapper
     return _available_content_type

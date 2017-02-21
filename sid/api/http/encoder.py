@@ -1,12 +1,8 @@
-"""
-This module contains a JSON serializer for Pyolite2 classes.
-"""
-
 from json import JSONEncoder
 from pyolite2 import Repository
 from sid.api import __projects_prefix__, __templates_prefix__
 
-class PyoliteEncoder(JSONEncoder):
+class Encoder(JSONEncoder):
     """
     JSON encoder for Pyolite classes.
     """

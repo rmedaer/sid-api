@@ -75,7 +75,7 @@ class GitRepository(object):
         for file in files:
             self.add_file(file)
 
-    def commit(self, message, user=None, parents=None):
+    def commit(self, message, user=None, parents=None, allow_empty=False):
         """
         Commit changes.
 
@@ -85,6 +85,8 @@ class GitRepository(object):
         parents -- Parent commits (default: HEAD)
         """
         assert self.is_open()
+
+        # TODO Make sure we have something to commit if allow_empty is False
 
         # Use default signature if user is not given
         if user is None:
@@ -133,18 +135,20 @@ class GitRepository(object):
         except KeyError:
             raise GitRemoteNotFound()
 
-    def create_remote(self, url, name='origin'):
+    def set_remote(self, url, name='origin'):
         """
-        Create a remote using given url.self.lookup_branch(branch_name)
+        Set a remote using given url.
+
+        Arguments:
         url -- Remote URL.
         name -- Remote name (default: 'origin')
         """
         assert self.is_open()
 
         try:
-            return self.repo.create_remote(name, url)
+            return self.repo.remotes.create(name, url)
         except ValueError:
-            raise GitRemoteDuplicate()
+            self.repo.remotes.set_url(name, url)
 
     def get_branch(self, branch_name):
         """
@@ -188,7 +192,9 @@ class GitRepository(object):
             remote_oid = self.repo.lookup_reference(remote_ref).target
             remote_commit = self.repo.get(remote_oid)
         except KeyError:
-            raise GitBranchNotFound()
+            # Remote branch doesn't exist; this is the case on new repository,
+            # ignore the error
+            return
 
         # Analyze which kind of merge we have to do during the pull
         merge_result, _ = self.repo.merge_analysis(remote_oid)
