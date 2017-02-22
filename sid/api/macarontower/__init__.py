@@ -42,6 +42,13 @@ class Catalog(object):
         except IOError:
             raise errors.CatalogNotFoundError()
 
+    def assert_uri(self, uri):
+        """
+        Assert URI exist or throws a ConfigurationNotFoundError.
+        """
+        if uri not in self.list():
+            raise errors.ConfigurationNotFoundError()
+
     def list(self):
         """
         List known configuration files from the catalog.
@@ -59,6 +66,28 @@ class Catalog(object):
 
         return format
 
+    def set_data(self, uri, data):
+        """
+        Write configuration file after validation.
+
+        Arguments:
+        uri -- URI of configuration file.
+        data -- Data to set.
+        """
+        self.assert_uri(uri)
+
+        file = self.safe_path(self.data['configs'][uri]['file'])
+
+        # Get schema from URI
+        schema = self.get_schema(uri)
+
+        # Validate input data if schema exists
+        if schema:
+            jsonschema.validate(data, schema)
+
+        # Write well formatted data
+        anyconfig.dump(data, file, ac_parser=self.get_format(uri), ac_safe=True)
+
     def get_data(self, uri):
         """
         Read configuration file from given macarontower URI.
@@ -66,8 +95,7 @@ class Catalog(object):
         Arguments:
         uri -- Key from macarontower.json file.
         """
-        if uri not in self.list():
-            raise errors.ConfigurationNotFoundError()
+        self.assert_uri(uri)
 
         file = self.safe_path(self.data['configs'][uri]['file'])
 
@@ -83,8 +111,7 @@ class Catalog(object):
         Arguments:
         uri -- Key from macarontower.json file.
         """
-        if uri not in self.list():
-            raise errors.ConfigurationNotFoundError()
+        self.assert_uri(uri)
 
         if not self.data['configs'][uri].get('schema'):
             return {}

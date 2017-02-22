@@ -15,7 +15,9 @@ from sid.api.macarontower.errors import (
     UnknownParserTypeError,
     ConfigurationNotFoundError,
     ConfigurationLoadingError,
-    SchemaLoadingError
+    SchemaLoadingError,
+    ValidationError,
+    SchemaError
 )
 
 @http.json_error_handling
@@ -133,10 +135,43 @@ class SettingsHandler(WorkspaceHandler):
                     log_message='Failed to load settings schema. '
                                 'Please contact your system administrator.'
                 )
+            except ConfigurationNotFoundError:
+                raise HTTPError(
+                    status_code=404,
+                    log_message='Settings \'%s\' not found.' % settings_path
+                )
 
         # We should never be able to come here ...
         else: # pragma: no cover
             raise HTTPError(
                 status_code=500,
                 log_message='Unrecognized accepted content type: %s' % output_content_type
+            )
+
+    @auth.require_authentication(__public_key__)
+    @http.available_content_type(['application/json'])
+    @http.available_content_type(['application/json'])
+    @http.parse_json_body()
+    def put(self, project_name, settings_path, *args, **kwargs):
+        """
+        """
+        try:
+            # Write data to configuration file using macarontower
+            self.catalog.set_data(settings_path, kwargs['json'])
+
+            # Commit all changes made in Git repository
+            self.project.commit_all('Modified configuration: %s' % settings_path)
+
+            # Push to remote
+            self.project.push('origin')
+        except ValidationError as vlde:
+            raise HTTPError(
+                status_code=400,
+                log_message='Configuration error: %s' % vlde.message
+            )
+        except SchemaError:
+            raise HTTPError(
+                status_code=500,
+                log_message='Invalid JSON schema. '
+                            'Please contact your administrator.'
             )

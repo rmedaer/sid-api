@@ -1,4 +1,5 @@
 from anyconfig import UnknownParserTypeError
+from jsonschema import ValidationError, SchemaError
 
 class InvalidCatalogError(Exception):
     """
