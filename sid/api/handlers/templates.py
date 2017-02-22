@@ -8,6 +8,7 @@ import sid.api.http as http
 import sid.api.auth as auth
 from sid.api import __templates_prefix__, __public_key__
 from sid.api.handlers.workspace import WorkspaceHandler
+from sid.api.schemas import TEMPLATE_SCHEMA
 
 @http.json_error_handling
 @http.json_serializer
@@ -118,10 +119,12 @@ class ProjectTemplateHandler(WorkspaceHandler):
     @auth.require_authentication(__public_key__)
     @http.accepted_content_type(['application/json'])
     @http.available_content_type(['application/json'])
-    @http.parse_json_body() # TODO
+    @http.parse_json_body(TEMPLATE_SCHEMA)
     def put(self, project_name, *args, **kwargs):
         """
         Install specified template on targeted project.
+        TODO: Implement upgrade procedure using the idea from @aroig
+        https://github.com/audreyr/cookiecutter/issues/784
 
         Example:
         > PUT /projects/example/template HTTP/1.1
@@ -141,8 +144,11 @@ class ProjectTemplateHandler(WorkspaceHandler):
         # Fetch template
         template = self.prepare_template(template_name)
 
+        # Validate template schema
+        template.validate(kwargs['json']['data'])
+
         # Apply it to our repository
-        template.apply(project.path)
+        template.apply(project.path, kwargs['json']['data'])
 
         # Commit all changes made in Git repository
         project.commit_all('Installed template: %s' % template_name)

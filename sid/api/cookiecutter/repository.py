@@ -4,6 +4,7 @@ This module contains an abstraction of Cookiecutter repository.
 
 import os
 import json
+import jsonschema
 from tornado.web import HTTPError
 from cookiecutter.main import cookiecutter
 from cookiecutter.exceptions import (
@@ -30,7 +31,25 @@ class CookiecutterRepository(GitRepository):
         """
         GitRepository.__init__(self, path)
 
-    def apply(self, dst_path, settings={}):
+    def validate(self, data):
+        schema = self.get_schema()
+
+        try:
+            jsonschema.validate(data, schema)
+        except jsonschema.ValidationError as vlde:
+            raise HTTPError(
+                status_code=400,
+                log_message='JSON error: %s' % vlde.message
+            )
+        except jsonschema.SchemaError:
+            # TODO log SchemaError for administrators and developpers
+            raise HTTPError(
+                status_code=500,
+                log_message='Invalid JSON schema. '
+                            'Please contact your administrator.'
+            )
+
+    def apply(self, dst_path, data={}):
         """
         Apply this template to given path.
         """
@@ -40,7 +59,7 @@ class CookiecutterRepository(GitRepository):
             cookiecutter(
                 self.path,
                 no_input=True,
-                extra_context={}, # TODO give extra variables
+                extra_context=data,
                 replay=False,
                 overwrite_if_exists=True,
                 output_dir=dst_path,
@@ -84,7 +103,7 @@ class CookiecutterRepository(GitRepository):
         schema = {
             'properties': {},
             'required': [],
-            'additionalProperties': False
+            'additionalProperties': True
         }
         for key in rc:
             schema['properties'][key] = {
