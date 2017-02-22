@@ -8,3 +8,4 @@ from projects import ProjectHandler, ProjectCollectionHandler
 from templates import TemplateHandler, TemplateCollectionHandler, ProjectTemplateHandler
 from version import VersionHandler
 from workspace import WorkspaceHandler
+from settings import SettingsCollectionHandler, SettingsHandler
