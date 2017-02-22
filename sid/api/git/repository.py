@@ -5,6 +5,7 @@ repository with pygit2 library.
 
 from pygit2 import ( # pylint: disable=E0611
     Repository,
+    GitError,
     discover_repository,
     init_repository,
     GIT_MERGE_ANALYSIS_UP_TO_DATE,
@@ -12,30 +13,14 @@ from pygit2 import ( # pylint: disable=E0611
     GIT_MERGE_ANALYSIS_NORMAL,
     GIT_RESET_HARD
 )
-
-class GitRepositoryNotFound(Exception):
-    """
-    Exception raised when Git repository doesn't exist.
-    """
-    pass
-
-class GitRemoteNotFound(Exception):
-    """
-    Exception raised when Git remote doesn't exist.
-    """
-    pass
-
-class GitBranchNotFound(Exception):
-    """
-    Exception raised when Git branch doesn't exist.
-    """
-    pass
-
-class GitRemoteDuplicate(Exception):
-    """
-    Exception raised when user try to create a remote which already exists.
-    """
-    pass
+from sid.api.git.errors import (
+    GitForbidden,
+    GitRepositoryNotFound,
+    GitRemoteNotFound,
+    GitBranchNotFound,
+    GitRemoteDuplicate,
+    handle_git_error
+)
 
 class GitRepository(object):
     """
@@ -75,7 +60,7 @@ class GitRepository(object):
         Keyword arguments:
         file -- A string which contains relative path of file to add.
         """
-        assert self.repo is not None
+        assert self.is_open()
 
         self.repo.index.add(self.resolve_path(file))
         self.repo.index.write()
@@ -90,7 +75,7 @@ class GitRepository(object):
         for file in files:
             self.add_file(file)
 
-    def commit(self, message, user=None, parents=None):
+    def commit(self, message, user=None, parents=None, allow_empty=False):
         """
         Commit changes.
 
@@ -99,7 +84,9 @@ class GitRepository(object):
         user -- Commit user (default: default_signature)
         parents -- Parent commits (default: HEAD)
         """
-        assert self.repo is not None
+        assert self.is_open()
+
+        # TODO Make sure we have something to commit if allow_empty is False
 
         # Use default signature if user is not given
         if user is None:
@@ -124,7 +111,7 @@ class GitRepository(object):
         """
         Commit all changes. (see #commit())
         """
-        assert self.repo is not None
+        assert self.is_open()
 
         # Add all files
         self.repo.index.add_all()
@@ -141,31 +128,33 @@ class GitRepository(object):
 
         Throws GitRemoteNotFound: when remote doesn't exist.
         """
-        assert self.repo is not None
+        assert self.is_open()
 
         try:
             return self.repo.remotes[remote_name]
         except KeyError:
             raise GitRemoteNotFound()
 
-    def create_remote(self, url, name='origin'):
+    def set_remote(self, url, name='origin'):
         """
-        Create a remote using given url.self.lookup_branch(branch_name)
+        Set a remote using given url.
+
+        Arguments:
         url -- Remote URL.
         name -- Remote name (default: 'origin')
         """
-        assert self.repo is not None
+        assert self.is_open()
 
         try:
-            return self.repo.create_remote(name, url)
+            return self.repo.remotes.create(name, url)
         except ValueError:
-            raise GitRemoteDuplicate()
+            self.repo.remotes.set_url(name, url)
 
     def get_branch(self, branch_name):
         """
         Get branch from its name.
         """
-        assert self.repo is not None
+        assert self.is_open()
 
         branch = self.repo.lookup_branch(branch_name)
 
@@ -188,16 +177,24 @@ class GitRepository(object):
         remote_name -- Name of remote to pull.
         branch_name -- Name of remote branch to pull.
         """
-        assert self.repo is not None
+        assert self.is_open()
 
-        # Get and fetch remote
+        # Retrieve and fetch remote
         remote = self.get_remote(remote_name)
-        remote.fetch(callbacks=self.callbacks)
+        try:
+            remote.fetch(callbacks=self.callbacks)
+        except GitError as gerr:
+            raise handle_git_error(gerr)
 
         # Lookup remote reference, oid and commit
         remote_ref = 'refs/remotes/%s/%s' % (remote_name, branch_name)
-        remote_oid = self.repo.lookup_reference(remote_ref).target
-        remote_commit = self.repo.get(remote_oid)
+        try:
+            remote_oid = self.repo.lookup_reference(remote_ref).target
+            remote_commit = self.repo.get(remote_oid)
+        except KeyError:
+            # Remote branch doesn't exist; this is the case on new repository,
+            # ignore the error
+            return
 
         # Analyze which kind of merge we have to do during the pull
         merge_result, _ = self.repo.merge_analysis(remote_oid)
@@ -237,7 +234,16 @@ class GitRepository(object):
         branch_name -- Branch to be pushed.
         """
         remote = self.get_remote(remote_name)
-        remote.push([self.get_branch(branch_name).name], callbacks=self.callbacks)
+        try:
+            remote.push([self.get_branch(branch_name).name], callbacks=self.callbacks)
+        except GitError as gerr:
+            err = handle_git_error(gerr)
+
+            if isinstance(gerr, GitForbidden):
+                # Automatically discard changes by fetching changes
+                self.reset_hard('refs/remotes/%s/%s' % (remote_name, branch_name))
+
+            raise err
 
     def set_callbacks(self, callbacks):
         """
@@ -253,7 +259,7 @@ class GitRepository(object):
         Keyword arguments:
         file -- Path to be resolved
         """
-        assert self.repo is not None
+        assert self.is_open()
 
         if os.path.isabs(file):
             return os.path.relative(file, self.repo.workdir)
@@ -267,9 +273,15 @@ class GitRepository(object):
         Keyword arguments:
         oid -- Targeted OID.
         """
-        assert self.repo is not None
+        assert self.is_open()
 
         if isinstance(oid, basestring):
             oid = self.repo.lookup_reference(oid).target
 
         self.repo.reset(oid, GIT_RESET_HARD)
+
+    def is_open(self):
+        """
+        Return a boolean which define if repository is open or not.
+        """
+        return self.repo is not None

@@ -9,42 +9,75 @@ from tornado.web import HTTPError
 from pyolite2 import RepositoryDuplicateError, Repository
 
 # Local imports
-from sid.api import __projects_prefix__
-from sid.api import __public_key__
-from sid.api.auth import require_authentication
-from sid.api.handlers.error import ErrorHandler
-from sid.api.handlers.serializer import SerializerHandler
-from sid.api.handlers.pyolite import PyoliteHandler
-from sid.api.http import available_content_type, accepted_content_type, parse_json_body
+import sid.api.auth as auth
+import sid.api.http as http
+from sid.api import __projects_prefix__, __public_key__
+from sid.api.git import GitForbidden
+from sid.api.handlers.workspace import WorkspaceHandler
+from sid.api.pyolite import patch_pyolite_repo
 from sid.api.schemas import PROJECT_SCHEMA
-from sid.api.pyolite import PyoliteEncoder, patch_pyolite_repo, GitPushForbidden
 
-class ProjectCollectionHandler(PyoliteHandler, ErrorHandler, SerializerHandler):
-    """ This handler manage a workspace. """
+@http.json_error_handling
+@http.json_serializer
+class ProjectCollectionHandler(WorkspaceHandler):
+    """
+    This handler process following routes:
 
-    @require_authentication(__public_key__)
-    @available_content_type(['application/json'])
+        - GET  /projects -- List projects
+        - POST /projects -- Create a new project
+    """
+
+    def prepare(self, *args, **kwargs):
+        """
+        Prepare user's workspace and Pyolite configuration to manage projects.
+        """
+        super(ProjectCollectionHandler, self).prepare()
+        self.pyolite = self.prepare_pyolite()
+
+    @http.available_content_type(['application/json'])
     def get(self, *args, **kwargs):
-        """ List available projects within this workspace. """
+        """
+        List all projects.
 
+        Example:
+        > GET /projects HTTP/1.1
+        > Accept: */*
+        >
+        """
         self.write([project
                     for project in self.pyolite.repos
                     if project.name.startswith(__projects_prefix__)])
 
-    @require_authentication(__public_key__)
-    @accepted_content_type(['application/json'])
-    @available_content_type(['application/json'])
-    @parse_json_body(PROJECT_SCHEMA)
+    @auth.require_authentication(__public_key__)
+    @http.accepted_content_type(['application/json'])
+    @http.available_content_type(['application/json'])
+    @http.parse_json_body(PROJECT_SCHEMA)
     def post(self, *args, **kwargs):
-        """ Add a new project in the workspace. """
+        """
+        Create and add a new project.
+
+        Example:
+        > POST /projects HTTP/1.1
+        > Accept: */*
+        > Content-Type: application/json
+        > Content-Length: 64
+        >
+        {"name":"test-project","rules":[{"users":["@all"],"perm":"RW"}]}
+        """
 
         try:
             # Create and add repository
             repo = Repository(__projects_prefix__ + kwargs['json']['name'])
             self.pyolite.repos.append(repo)
 
-            # Add user permissions
-            patch_pyolite_repo(repo, make_patch(PyoliteEncoder().default(repo), kwargs['json']))
+            # Add user permissions by patching repo
+            patch_pyolite_repo(
+                repo,
+                make_patch(
+                    http.Encoder().default(repo),
+                    kwargs['json']
+                )
+            )
         except RepositoryDuplicateError:
             raise HTTPError(
                 status_code=409,
@@ -54,7 +87,7 @@ class ProjectCollectionHandler(PyoliteHandler, ErrorHandler, SerializerHandler):
         try:
             # Save Gitolite configuration and commit changes
             self.pyolite.save('Created project \'%s\'' % kwargs['json']['name'])
-        except GitPushForbidden:
+        except GitForbidden:
             raise HTTPError(
                 status_code=403,
                 log_message='You are not authorized to create projects'

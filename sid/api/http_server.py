@@ -11,37 +11,39 @@ from tornado.httpserver import HTTPServer
 from tornado.web import Application
 from tornado.ioloop import IOLoop
 from .handlers import (
-    VersionHandler,
-    DefaultHandler,
+    NotFoundHandler,
     NotImplementedHandler,
     ProjectHandler,
     ProjectCollectionHandler,
+    ProjectTemplateHandler,
+    TemplateCollectionHandler,
     TemplateHandler,
-    TemplateCollectionHandler
+    VersionHandler,
+    WorkspaceHandler
 )
 
 def create_app(settings):
     """ Create a Tornado application. """
 
     return Application([
-        (r"/projects/(.*)/settings/(.*)", NotImplementedHandler),
-        (r"/projects/(.*)/settings", NotImplementedHandler),
-        (r"/projects/(.*)/template", NotImplementedHandler),
-        (r"/projects/(.*)/push", NotImplementedHandler),
+        # (r"/projects/(.*)/settings/(.*)", NotImplementedHandler),
+        # (r"/projects/(.*)/settings", NotImplementedHandler),
+        # (r"/projects/(.*)/push", NotImplementedHandler),
+        (r"/projects/(.*)/template", ProjectTemplateHandler, settings),
         (r"/projects/(.*)", ProjectHandler, settings),
         (r"/projects", ProjectCollectionHandler, settings),
         (r"/templates/(.*)", TemplateHandler, settings),
         (r"/templates", TemplateCollectionHandler, settings),
         (r"/version", VersionHandler),
-        (r".*", DefaultHandler)
+        (r".*", NotFoundHandler)
     ])
 
 def main(port=80): # pragma: no cover
     """ Instance and start a tornado HTTP server. """
 
     settings = dict(
-        workspaces_dir='/var/lib/sid/workspaces',
-        remotes_url='http://git.warehouse.sid.com/'
+        workspace_dir='/var/lib/sid/workspaces',
+        remote_url='http://git.warehouse.sid.com/'
     )
 
     app = create_app(settings)

@@ -16,6 +16,7 @@ from jwt.exceptions import (
     InvalidTokenError
 )
 from tornado.web import HTTPError, RequestHandler
+from oauth_callback import OAuthCallback
 
 def require_authentication(public_key):
     # pylint: disable=C0111
@@ -68,6 +69,7 @@ def require_authentication(public_key):
 
             kwargs['bearer'] = parts[1]
             kwargs['auth'] = decoded
+
             return func(*args, **kwargs)
         return wrapper
     return _require_authentication
