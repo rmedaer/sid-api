@@ -66,6 +66,21 @@ class Catalog(object):
 
         return format
 
+    def get_metadata(self, uri):
+        """
+        Get metadata about the URI.
+
+        Arguments:
+        uri -- URI of configuration.
+        """
+        self.assert_uri(uri)
+
+        return {
+            "title": self.data[uri].get('title'),
+            "description": self.data[uri].get('description'),
+            "schema": True if self.data[uri].get('schema') else False
+        }
+
     def set_data(self, uri, data):
         """
         Write configuration file after validation.
