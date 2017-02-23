@@ -37,6 +37,12 @@ __macarontower_schema_1_0_0__ = {
                     },
                     "schema": {
                         "type": "string"
+                    },
+                    "title": {
+                        "type": "string"
+                    },
+                    "description": {
+                        "type": "string"
                     }
                 },
                 "required": [
