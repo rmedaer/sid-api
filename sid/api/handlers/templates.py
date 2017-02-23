@@ -152,6 +152,3 @@ class ProjectTemplateHandler(WorkspaceHandler):
 
         # Commit all changes made in Git repository
         project.commit_all('Installed template: %s' % template_name)
-
-        # Push to remote
-        project.push('origin')

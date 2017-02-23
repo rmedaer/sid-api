@@ -42,6 +42,12 @@ class GitRemoteDuplicate(Exception):
     """
     pass
 
+class GitAutomaticMergeNotAvailable(Exception):
+    """
+    Exception raised when user try to automatically merge and it's failed.
+    """
+    pass
+
 def handle_git_error(error):
     http_matches = re.match(HTTP_ERROR, error.message)
     if http_matches and int(http_matches.group(1)) == 401:

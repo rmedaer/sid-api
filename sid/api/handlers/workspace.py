@@ -15,7 +15,7 @@ from sid.api.git import GitRepository, GitRepositoryNotFound, GitRemoteDuplicate
 class WorkspaceHandler(RequestHandler):
     """ Abstract handler for Pyolite configuration. """
 
-    def initialize(self, workspace_dir, remote_url):
+    def initialize(self):
         """
         Initialize workspace handler.
 
@@ -23,8 +23,8 @@ class WorkspaceHandler(RequestHandler):
         workspace_dir -- Base workspace directory.
         remote_url -- Base remote URL.
         """
-        self.workspace_dir = workspace_dir
-        self.remote_base_url = remote_url
+        self.workspace_dir = self.application.settings.get('workspace_dir')
+        self.remote_base_url = self.application.settings.get('remote_url')
 
     def prepare(self, *args, **kwargs):
         """

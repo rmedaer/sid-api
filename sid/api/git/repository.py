@@ -19,6 +19,7 @@ from sid.api.git.errors import (
     GitRemoteNotFound,
     GitBranchNotFound,
     GitRemoteDuplicate,
+    GitAutomaticMergeNotAvailable,
     handle_git_error
 )
 
@@ -169,6 +170,23 @@ class GitRepository(object):
         """
         return self.repo.create_branch(branch_name, commit)
 
+    def fetch_all(self, remote_name):
+        """
+        Fetch changes from given remote.
+
+        Arguments:
+        remote_name -- Remote name.
+        """
+        assert self.is_open()
+
+        remote = self.get_remote(remote_name)
+        try:
+            remote.fetch(callbacks=self.callbacks)
+        except GitError as gerr:
+            raise handle_git_error(gerr)
+
+        return remote # almost useful to return fetched remote
+
     def pull(self, remote_name, branch_name='master'):
         """
         Pull changes from given remote repository.
@@ -180,11 +198,7 @@ class GitRepository(object):
         assert self.is_open()
 
         # Retrieve and fetch remote
-        remote = self.get_remote(remote_name)
-        try:
-            remote.fetch(callbacks=self.callbacks)
-        except GitError as gerr:
-            raise handle_git_error(gerr)
+        self.fetch_all(remote_name)
 
         # Lookup remote reference, oid and commit
         remote_ref = 'refs/remotes/%s/%s' % (remote_name, branch_name)
@@ -220,7 +234,7 @@ class GitRepository(object):
 
         # NOTE: We currently NOT support merge during pull.
         elif merge_result & GIT_MERGE_ANALYSIS_NORMAL:
-            raise AssertionError('Unable to do merge')
+            raise GitAutomaticMergeNotAvailable('Merge when pulling is not implemented')
 
         else:
             raise AssertionError('Unknown merge analysis result')
@@ -285,3 +299,23 @@ class GitRepository(object):
         Return a boolean which define if repository is open or not.
         """
         return self.repo is not None
+
+    def ahead_behind(self, remote_name='origin', branch_name='master'):
+        """
+        Calculate how many different commits are in the non-common parts of
+        the history between the two given ids.
+
+        Arguments:
+        remote_name -- Targeted remote (optional, default='origin')
+        branch_name -- Remote branch (optional, default='origin')
+        """
+        assert self.is_open()
+
+        # First fetch changes from remote
+        self.fetch_all(remote_name)
+
+        # Calculate diff
+        return self.repo.ahead_behind(
+            self.repo.revparse_single('HEAD').id,
+            self.repo.revparse_single('refs/remotes/%s/%s' % (remote_name, branch_name)).id
+        )
