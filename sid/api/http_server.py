@@ -29,17 +29,17 @@ def create_app(settings):
     """ Create a Tornado application. """
 
     return Application([
-        (r"/projects/(\S+)/settings/(\S+)", SettingsHandler, settings),
-        (r"/projects/(\S+)/settings", SettingsCollectionHandler, settings),
-        (r"/projects/(\S+)/template", ProjectTemplateHandler, settings),
-        (r"/projects/(\S+)/deploy", ProjectDeploymentHandler, settings),
-        (r"/projects/(\S+)", ProjectHandler, settings),
-        (r"/projects", ProjectCollectionHandler, settings),
-        (r"/templates/(\S+)", TemplateHandler, settings),
-        (r"/templates", TemplateCollectionHandler, settings),
+        (r"/projects/(\S+)/settings/(\S+)", SettingsHandler),
+        (r"/projects/(\S+)/settings", SettingsCollectionHandler),
+        (r"/projects/(\S+)/template", ProjectTemplateHandler),
+        (r"/projects/(\S+)/deploy", ProjectDeploymentHandler),
+        (r"/projects/(\S+)", ProjectHandler),
+        (r"/projects", ProjectCollectionHandler),
+        (r"/templates/(\S+)", TemplateHandler),
+        (r"/templates", TemplateCollectionHandler),
         (r"/version", VersionHandler),
         (r".*", NotFoundHandler)
-    ])
+    ], **settings)
 
 def main(port=80): # pragma: no cover
     """ Instance and start a tornado HTTP server. """
