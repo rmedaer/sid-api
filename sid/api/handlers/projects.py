@@ -16,7 +16,7 @@ from pyolite2 import (
 import sid.api.http as http
 import sid.api.auth as auth
 from sid.api import __projects_prefix__, __public_key__
-from sid.api.git import GitForbidden
+from sid.api.git import GitForbidden, GitAutomaticMergeNotAvailable
 from sid.api.schemas import PROJECT_SCHEMA, PROJECT_PATCH_SCHEMA
 from sid.api.handlers.workspace import WorkspaceHandler
 from sid.api.pyolite import patch_pyolite_repo
@@ -283,3 +283,64 @@ class ProjectHandler(WorkspaceHandler):
             )
 
         self.set_status(204)
+
+@http.json_error_handling
+@http.json_serializer
+class ProjectDeploymentHandler(WorkspaceHandler):
+    """
+    This handler process following routes:
+
+        - PUT    /projects/<project_name>/deploy -- Deploy a project
+    """
+
+    def prepare(self, *args, **kwargs):
+        """
+        Prepare user's workspace.
+        """
+        super(ProjectDeploymentHandler, self).prepare()
+
+    @auth.require_authentication(__public_key__)
+    def put(self, project_name, *args, **kwargs):
+        """
+        Deploy local changes.
+
+        Example:
+        > PUT /projects/example/deploy HTTP/1.1
+        > Accept: */*
+        >
+        """
+        # Fetch and load the targeted project
+        project = self.prepare_project(project_name)
+
+        # Calculate diff between local copy and remote
+        ahead, behind = project.ahead_behind('origin')
+
+        # If there is remote changes, try to apply them locally before pushing
+        if behind:
+            try:
+                project.pull('origin')
+            except GitAutomaticMergeNotAvailable:
+                raise HTTPError(
+                    status_code=412,
+                    log_message='Your local copy is %d commits behind remote repository. '
+                                'If you cannot resolve the issue your self, '
+                                'please contact your system administrator.' % behind
+                )
+
+        # If we don't have anything to push return OK
+        if not ahead:
+            self.set_status(200)
+            return
+
+        # Push our changes
+        try:
+            project.push('origin')
+        except GitForbidden:
+            raise HTTPError(
+                status_code=403,
+                log_message='You are not authorized to deploy this project'
+            )
+
+        # Obviously we cannot return a confirmation that changes has been applied.
+        # So we are returning a '202 - Accepted' code.
+        self.set_status(202)

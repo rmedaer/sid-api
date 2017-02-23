@@ -16,6 +16,7 @@ from .handlers import (
     ProjectHandler,
     ProjectCollectionHandler,
     ProjectTemplateHandler,
+    ProjectDeploymentHandler,
     SettingsHandler,
     SettingsCollectionHandler,
     TemplateCollectionHandler,
@@ -30,8 +31,8 @@ def create_app(settings):
     return Application([
         (r"/projects/(\S+)/settings/(\S+)", SettingsHandler, settings),
         (r"/projects/(\S+)/settings", SettingsCollectionHandler, settings),
-        # (r"/projects/(.*)/push", NotImplementedHandler),
         (r"/projects/(\S+)/template", ProjectTemplateHandler, settings),
+        (r"/projects/(\S+)/deploy", ProjectDeploymentHandler, settings),
         (r"/projects/(\S+)", ProjectHandler, settings),
         (r"/projects", ProjectCollectionHandler, settings),
         (r"/templates/(\S+)", TemplateHandler, settings),

@@ -10,5 +10,6 @@ from sid.api.git.errors import (
     GitRepositoryNotFound,
     GitRemoteNotFound,
     GitBranchNotFound,
-    GitRemoteDuplicate
+    GitRemoteDuplicate,
+    GitAutomaticMergeNotAvailable
 )

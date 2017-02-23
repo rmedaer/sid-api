@@ -154,9 +154,6 @@ class SettingsHandler(WorkspaceHandler):
 
             # Commit all changes made in Git repository
             self.project.commit_all('Modified configuration: %s' % settings_path)
-
-            # Push to remote
-            self.project.push('origin')
         except ValidationError as vlde:
             raise HTTPError(
                 status_code=400,
