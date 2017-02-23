@@ -10,7 +10,7 @@ import sid.api.auth as auth
 from sid.api import __public_key__
 from sid.api.handlers.workspace import WorkspaceHandler
 from sid.api.macarontower import Catalog
-from sid.api.macarontower.errors import (
+from sid.api.macarontower.exceptions import (
     CatalogNotFoundError,
     UnknownParserTypeError,
     ConfigurationNotFoundError,
@@ -93,6 +93,7 @@ class SettingsHandler(WorkspaceHandler):
 
     @auth.require_authentication(__public_key__)
     @http.available_content_type([
+        'application/vnd.sid.metadata+json',
         'application/schema+json',
         'application/json'
     ])
@@ -107,46 +108,38 @@ class SettingsHandler(WorkspaceHandler):
         """
         output_content_type = kwargs['output_content_type']
 
-        # User asked JSON data for given settings URI
-        if output_content_type == 'application/json':
-            try:
+        try:
+            # User asked JSON data for given settings URI
+            if output_content_type == 'application/json':
                 self.write(self.catalog.get_data(settings_path))
-            except UnknownParserTypeError as err:
-                raise HTTPError(
-                    status_code=500,
-                    log_message='Server side settings error: %s. '
-                                'Please contact your system administrator.' % err.message
-                )
-            except ConfigurationNotFoundError as err:
-                raise HTTPError(
-                    status_code=404,
-                    log_message='Settings \'%s\' not found.' % settings_path
-                )
-            except ConfigurationLoadingError as err:
-                self.write({})
 
-        # User asked JSON schema for given settings URI
-        elif output_content_type == 'application/schema+json':
-            try:
+            # User asked JSON schema for given settings URI
+            elif output_content_type == 'application/schema+json':
                 self.write(self.catalog.get_schema(settings_path))
-            except SchemaLoadingError:
-                raise HTTPError(
-                    status_code=500,
-                    log_message='Failed to load settings schema. '
-                                'Please contact your system administrator.'
-                )
-            except ConfigurationNotFoundError:
-                raise HTTPError(
-                    status_code=404,
-                    log_message='Settings \'%s\' not found.' % settings_path
-                )
 
-        # We should never be able to come here ...
-        else: # pragma: no cover
+            # Return metadata for given settings URI
+            elif output_content_type == 'application/vnd.sid.metadata+json':
+                self.write(self.catalog.get_metadata(settings_path))
+
+        except UnknownParserTypeError as err:
             raise HTTPError(
                 status_code=500,
-                log_message='Unrecognized accepted content type: %s' % output_content_type
+                log_message='Server side settings error: %s. '
+                            'Please contact your system administrator.' % err.message
             )
+        except SchemaLoadingError:
+            raise HTTPError(
+                status_code=500,
+                log_message='Failed to load settings schema. '
+                            'Please contact your system administrator.'
+            )
+        except ConfigurationNotFoundError:
+            raise HTTPError(
+                status_code=404,
+                log_message='Settings \'%s\' not found.' % settings_path
+            )
+        except ConfigurationLoadingError:
+            self.write({})
 
     @auth.require_authentication(__public_key__)
     @http.available_content_type(['application/json'])
