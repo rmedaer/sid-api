@@ -10,7 +10,7 @@ import sid.api.auth as auth
 from sid.api import __public_key__
 from sid.api.handlers.workspace import WorkspaceHandler
 from sid.api.macarontower import Catalog
-from sid.api.macarontower.errors import (
+from sid.api.macarontower.exceptions import (
     CatalogNotFoundError,
     UnknownParserTypeError,
     ConfigurationNotFoundError,
@@ -133,12 +133,12 @@ class SettingsHandler(WorkspaceHandler):
                 log_message='Failed to load settings schema. '
                             'Please contact your system administrator.'
             )
-        except ConfigurationNotFoundError as err:
+        except ConfigurationNotFoundError:
             raise HTTPError(
                 status_code=404,
                 log_message='Settings \'%s\' not found.' % settings_path
             )
-        except ConfigurationLoadingError as err:
+        except ConfigurationLoadingError:
             self.write({})
 
     @auth.require_authentication(__public_key__)
