@@ -1,13 +1,13 @@
 from anyconfig import UnknownParserTypeError
 from jsonschema import ValidationError, SchemaError
 
-class InvalidCatalogError(Exception):
+class CatalogFormatError(Exception):
     """
     Error raised when macarontower cannot parse its catalog file.
     """
     pass
 
-class UnknownCatalogVersion(Exception):
+class UnknownCatalogVersionError(Exception):
     """
     Error raised when catalog version is not recognized by macarontower.
     """
