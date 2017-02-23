@@ -1,1 +1,5 @@
 *.pyc
+.coverage
+tests/__pycache__
+tests/fixtures/gitolite
+docs/.build
