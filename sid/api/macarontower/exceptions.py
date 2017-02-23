@@ -1,3 +1,7 @@
+"""
+This module contains exceptions raised by macarontower module.
+"""
+
 from anyconfig import UnknownParserTypeError
 from jsonschema import ValidationError, SchemaError
 

@@ -7,11 +7,27 @@ import json
 import jsonschema
 import anyconfig
 
-from . import __macarontower_file__, __macarontower_schema__, __macarontower_schema_1_0_0__
 from . import exceptions
+from . import (
+    __macarontower_file__,
+    __macarontower_schema__,
+    __macarontower_schema_1_0_0__
+)
 
 class Catalog(object):
+    """
+    This class abstract reading and writing macarontower file (macarontower.json).
+    """
+
     def __init__(self, path, allow_absolute=False, allow_unsafe=False):
+        """
+        Catalog constructor.
+
+        Arguments:
+        path -- Root directory of the catalog file.
+        allow_absolute -- If set, allows to use absolute file path.
+        allow_unsafe -- If set, allows to use relative path out of root directory.
+        """
         self.path = path
         self.data = None
         self.version = None
@@ -142,7 +158,11 @@ class Catalog(object):
 
     def safe_path(self, file):
         """
-        TODO
+        Create safe path from given file with options passed to Catalog object.
+        It's using 'allow_unsafe' and 'absolute_path' to refactor input file.
+
+        Arguments:
+        file -- Path of file to review.
         """
         # If file has absolute path that we not authorize, raise an error
         if os.path.isabs(file):
