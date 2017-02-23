@@ -16,6 +16,8 @@ from .handlers import (
     ProjectHandler,
     ProjectCollectionHandler,
     ProjectTemplateHandler,
+    SettingsHandler,
+    SettingsCollectionHandler,
     TemplateCollectionHandler,
     TemplateHandler,
     VersionHandler,
@@ -26,13 +28,13 @@ def create_app(settings):
     """ Create a Tornado application. """
 
     return Application([
-        # (r"/projects/(.*)/settings/(.*)", NotImplementedHandler),
-        # (r"/projects/(.*)/settings", NotImplementedHandler),
+        (r"/projects/(\S+)/settings/(\S+)", SettingsHandler, settings),
+        (r"/projects/(\S+)/settings", SettingsCollectionHandler, settings),
         # (r"/projects/(.*)/push", NotImplementedHandler),
-        (r"/projects/(.*)/template", ProjectTemplateHandler, settings),
-        (r"/projects/(.*)", ProjectHandler, settings),
+        (r"/projects/(\S+)/template", ProjectTemplateHandler, settings),
+        (r"/projects/(\S+)", ProjectHandler, settings),
         (r"/projects", ProjectCollectionHandler, settings),
-        (r"/templates/(.*)", TemplateHandler, settings),
+        (r"/templates/(\S+)", TemplateHandler, settings),
         (r"/templates", TemplateCollectionHandler, settings),
         (r"/version", VersionHandler),
         (r".*", NotFoundHandler)
