@@ -17,6 +17,26 @@ from jwt.exceptions import (
 )
 from tornado.web import HTTPError, RequestHandler
 from oauth_callback import OAuthCallback
+from jwt.contrib.algorithms.pycrypto import RSAAlgorithm
+
+__jwt_algorithms__ = {
+    'RS256': RSAAlgorithm(RSAAlgorithm.SHA256),
+    'RS384': RSAAlgorithm(RSAAlgorithm.SHA384),
+    'RS512': RSAAlgorithm(RSAAlgorithm.SHA512)
+}
+
+# I don't know why but on production baseline RS256 was not registered
+# automatically, so we are trying to register them
+# Since we only accept RSA PKI as JWT tokens (see rfc7518 section 3.1)
+# we are using the following list:
+for algorithm in __jwt_algorithms__:
+    try:
+        jwt.register_algorithm(algorithm, __jwt_algorithms__[algorithm])
+    except ValueError as err:
+        if err.message == 'Algorithm already has a handler.':
+            # Well, if the algorithm is almost registered, pass.
+            continue
+        raise err
 
 def require_authentication():
     # pylint: disable=C0111
@@ -56,7 +76,9 @@ def require_authentication():
             try:
                 decoded = jwt.decode(
                     parts[1],
-                    settings.get('public_key')
+                    settings.get('public_key'),
+                    audience=settings.get('audience', 'sid'),
+                    algorithms=[settings.get('algorithm', 'RS256')]
                 )
             except (DecodeError,
                     ExpiredSignatureError,

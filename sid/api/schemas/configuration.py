@@ -24,6 +24,12 @@ CONFIGURATION_SCHEMA = {
                 },
                 "username_field": {
                     "type": "string"
+                },
+                "audience": {
+                    "type": "string"
+                },
+                "algorithm": {
+                    "type": "string"
                 }
             },
             "required": [
