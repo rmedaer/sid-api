@@ -6,7 +6,7 @@ configuration.
 # Local imports
 import sid.api.http as http
 import sid.api.auth as auth
-from sid.api import __templates_prefix__, __public_key__
+from sid.api import __templates_prefix__
 from sid.api.handlers.workspace import WorkspaceHandler
 from sid.api.schemas import TEMPLATE_SCHEMA
 
@@ -26,7 +26,7 @@ class TemplateCollectionHandler(WorkspaceHandler):
         super(TemplateCollectionHandler, self).prepare()
         self.pyolite = self.prepare_pyolite()
 
-    @auth.require_authentication(__public_key__)
+    @auth.require_authentication()
     @http.available_content_type(['application/json'])
     def get(self, *args, **kwargs):
         """
@@ -57,7 +57,7 @@ class TemplateHandler(WorkspaceHandler):
         super(TemplateHandler, self).prepare()
         self.pyolite = self.prepare_pyolite()
 
-    @auth.require_authentication(__public_key__)
+    @auth.require_authentication()
     @http.available_content_type([
         'text/markdown',
         'application/schema+json',
@@ -116,7 +116,7 @@ class ProjectTemplateHandler(WorkspaceHandler):
         TODO
         """
 
-    @auth.require_authentication(__public_key__)
+    @auth.require_authentication()
     @http.accepted_content_type(['application/json'])
     @http.available_content_type(['application/json'])
     @http.parse_json_body(TEMPLATE_SCHEMA)

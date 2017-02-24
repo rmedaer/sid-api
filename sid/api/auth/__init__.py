@@ -18,18 +18,24 @@ from jwt.exceptions import (
 from tornado.web import HTTPError, RequestHandler
 from oauth_callback import OAuthCallback
 
-def require_authentication(public_key):
+def require_authentication():
     # pylint: disable=C0111
-    def _require_authentication(func):
-        # pylint: disable=C0111
+    def _require_authentication(func): # pylint: disable=C0111
+        # Func argument MUST be callable
+        assert callable(func)
+
         def wrapper(*args, **kwargs):
+            """
+            Replace original function by this one. As any wrapper it's calling
+            original function after authentication validation.
+            """
             handler = args[0]
-            if not isinstance(handler, RequestHandler):
-                raise HTTPError(
-                    status_code=500,
-                    log_message='Authentication decorator error. '
-                                'Please contact your administrator.'
-                )
+
+            # Decorated function must be a method of RequestHandler
+            assert isinstance(handler, RequestHandler)
+
+            # Get authentication settings from application handler
+            settings = handler.application.settings.get('auth', {})
 
             auth_header = handler.request.headers.get('Authorization')
             if auth_header is None:
@@ -50,7 +56,7 @@ def require_authentication(public_key):
             try:
                 decoded = jwt.decode(
                     parts[1],
-                    public_key
+                    settings.get('public_key')
                 )
             except (DecodeError,
                     ExpiredSignatureError,
@@ -67,8 +73,20 @@ def require_authentication(public_key):
                     log_message='Token validation failed'
                 )
 
-            kwargs['bearer'] = parts[1]
-            kwargs['auth'] = decoded
+            # Get userfield from decoded payload
+            user_field = settings.get('username_field', 'user')
+            user = decoded.get(user_field)
+            if not user:
+                raise HTTPError(
+                    status_code=403,
+                    log_message='Missing JWT tuple: %s' % user_field
+                )
+
+            kwargs['auth'] = {
+                'bearer': parts[1],
+                'payload': decoded,
+                'user': user
+            }
 
             return func(*args, **kwargs)
         return wrapper

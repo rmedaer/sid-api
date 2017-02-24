@@ -6,7 +6,7 @@ import os
 import sid.api.http as http
 import sid.api.auth as auth
 from tornado.web import RequestHandler, HTTPError
-from sid.api import __public_key__, __gitolite_admin__, __projects_prefix__, __templates_prefix__
+from sid.api import __gitolite_admin__, __projects_prefix__, __templates_prefix__
 from sid.api.pyolite import PyoliteRepository
 from sid.api.cookiecutter import CookiecutterRepository
 from sid.api.git import GitRepository, GitRepositoryNotFound, GitRemoteDuplicate, GitBranchNotFound, GitForbidden
@@ -23,8 +23,8 @@ class WorkspaceHandler(RequestHandler):
         workspace_dir -- Base workspace directory.
         remote_url -- Base remote URL.
         """
-        self.workspace_dir = self.application.settings.get('workspace_dir')
-        self.remote_base_url = self.application.settings.get('remote_url')
+        self.workspace_dir = self.application.settings.get('app').get('workspace_dir')
+        self.remote_base_url = self.application.settings.get('app').get('remote_url')
 
     def prepare(self, *args, **kwargs):
         """
@@ -32,7 +32,7 @@ class WorkspaceHandler(RequestHandler):
         """
         self.prepare_workspace(*args, **kwargs)
 
-    @auth.require_authentication(__public_key__)
+    @auth.require_authentication()
     def prepare_workspace(self, *args, **kwargs):
         """
         Change working directory to user's workspace.
@@ -42,7 +42,7 @@ class WorkspaceHandler(RequestHandler):
         Keyword arguments:
         auth -- An dictionnary which contains user settings.
         """
-        user_workspace_dir = os.path.join(self.workspace_dir, kwargs['auth']['mail'])
+        user_workspace_dir = os.path.join(self.workspace_dir, kwargs['auth']['user'])
 
         # Be sure the path is safe even it's calculated from signed JWT.
         # If an attempt to hack using path traversal is detected, offer a job !
@@ -61,12 +61,12 @@ class WorkspaceHandler(RequestHandler):
         # Change working directory
         os.chdir(user_workspace_dir)
 
-    @auth.require_authentication(__public_key__)
+    @auth.require_authentication()
     def prepare_pyolite(self, *args, **kwargs):
         """
         Prepare Pyolite repository.
         """
-        local_path = os.path.join(self.workspace_dir, kwargs['auth']['mail'], 'admin')
+        local_path = os.path.join(self.workspace_dir, kwargs['auth']['user'], 'admin')
         remote_url = http.join_url_path(self.remote_base_url, __gitolite_admin__)
 
         # Initialize Pyolite repository
@@ -80,7 +80,7 @@ class WorkspaceHandler(RequestHandler):
 
         return pyolite
 
-    @auth.require_authentication(__public_key__)
+    @auth.require_authentication()
     def prepare_project(self, project_name, *args, **kwargs):
         """
         Prepare a project in user workspace from its name.
@@ -90,7 +90,7 @@ class WorkspaceHandler(RequestHandler):
 
         Keyword arguments: (see prepare_repository)
         """
-        local_path = os.path.join(self.workspace_dir, kwargs['auth']['mail'], __projects_prefix__, project_name)
+        local_path = os.path.join(self.workspace_dir, kwargs['auth']['user'], __projects_prefix__, project_name)
         remote_url = http.join_url_path(self.remote_base_url, __projects_prefix__, project_name)
 
         # Initialize Git repository
@@ -101,7 +101,7 @@ class WorkspaceHandler(RequestHandler):
 
         return project
 
-    @auth.require_authentication(__public_key__)
+    @auth.require_authentication()
     def prepare_template(self, template_name, *args, **kwargs):
         """
         Prepare a template in user workspace from its name.
@@ -111,7 +111,7 @@ class WorkspaceHandler(RequestHandler):
 
         Keyword arguments: (see prepare_repository)
         """
-        local_path = os.path.join(self.workspace_dir, kwargs['auth']['mail'], __templates_prefix__, template_name)
+        local_path = os.path.join(self.workspace_dir, kwargs['auth']['user'], __templates_prefix__, template_name)
         remote_url = http.join_url_path(self.remote_base_url, __templates_prefix__, template_name)
 
         # Initialize Git repository
@@ -122,7 +122,7 @@ class WorkspaceHandler(RequestHandler):
 
         return template
 
-    @auth.require_authentication(__public_key__)
+    @auth.require_authentication()
     def prepare_repository(self, repository, remote_url, *args, **kwargs):
         """
         Try to clone a given repository into user's workspace.
@@ -140,8 +140,8 @@ class WorkspaceHandler(RequestHandler):
         # Set Git credentials
         repository.set_callbacks(
             auth.OAuthCallback(
-                kwargs['auth']['mail'], # User
-                kwargs['bearer'] # Password (here the token)
+                kwargs['auth']['user'], # User
+                kwargs['auth']['bearer'] # Password (here the token)
             )
         )
 

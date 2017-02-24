@@ -4,3 +4,4 @@
 
 from project import PROJECT_SCHEMA, PROJECT_PATCH_SCHEMA
 from template import TEMPLATE_SCHEMA
+from configuration import CONFIGURATION_SCHEMA

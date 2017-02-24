@@ -7,7 +7,6 @@ from tornado.web import HTTPError
 # Local imports
 import sid.api.http as http
 import sid.api.auth as auth
-from sid.api import __public_key__
 from sid.api.handlers.workspace import WorkspaceHandler
 from sid.api.macarontower import Catalog
 from sid.api.macarontower.exceptions import (
@@ -49,7 +48,7 @@ class SettingsCollectionHandler(WorkspaceHandler):
                             'Please contact your system administrator.'
             )
 
-    @auth.require_authentication(__public_key__)
+    @auth.require_authentication()
     @http.available_content_type(['application/json'])
     def get(self, project_name, *args, **kwargs):
         """
@@ -91,7 +90,7 @@ class SettingsHandler(WorkspaceHandler):
                             'Please contact your system administrator.'
             )
 
-    @auth.require_authentication(__public_key__)
+    @auth.require_authentication()
     @http.available_content_type([
         'application/vnd.sid.metadata+json',
         'application/schema+json',
@@ -141,7 +140,7 @@ class SettingsHandler(WorkspaceHandler):
         except ConfigurationLoadingError:
             self.write({})
 
-    @auth.require_authentication(__public_key__)
+    @auth.require_authentication()
     @http.available_content_type(['application/json'])
     @http.available_content_type(['application/json'])
     @http.parse_json_body()
