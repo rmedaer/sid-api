@@ -9,7 +9,14 @@ from tornado.web import RequestHandler, HTTPError
 from sid.api import __gitolite_admin__, __projects_prefix__, __templates_prefix__
 from sid.api.pyolite import PyoliteRepository
 from sid.api.cookiecutter import CookiecutterRepository
-from sid.api.git import GitRepository, GitRepositoryNotFound, GitRemoteDuplicate, GitBranchNotFound, GitForbidden
+from sid.api.git import (
+    OAuthCallback,
+    GitRepository,
+    GitRepositoryNotFound,
+    GitRemoteDuplicate,
+    GitBranchNotFound,
+    GitForbidden
+)
 
 @http.json_error_handling
 class WorkspaceHandler(RequestHandler):
@@ -139,7 +146,7 @@ class WorkspaceHandler(RequestHandler):
 
         # Set Git credentials
         repository.set_callbacks(
-            auth.OAuthCallback(
+            OAuthCallback(
                 kwargs['auth']['user'], # User
                 kwargs['auth']['bearer'] # Password (here the token)
             )

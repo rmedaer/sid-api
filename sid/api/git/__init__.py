@@ -2,6 +2,9 @@
 Extends features from pygit2 library.
 """
 
+from oauth_callback import (
+    OAuthCallback
+)
 from repository import (
     GitRepository
 )
