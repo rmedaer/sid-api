@@ -43,7 +43,7 @@ class SettingsCollectionHandler(WorkspaceHandler):
             self.catalog = Catalog(self.project.path)
         except CatalogNotFoundError:
             raise HTTPError(
-                status_code=503,
+                status_code=500,
                 log_message='Failed to read settings catalog. '
                             'Please contact your system administrator.'
             )
@@ -85,7 +85,7 @@ class SettingsHandler(WorkspaceHandler):
             self.catalog = Catalog(self.project.path)
         except CatalogNotFoundError:
             raise HTTPError(
-                status_code=503,
+                status_code=500,
                 log_message='Failed to read settings catalog. '
                             'Please contact your system administrator.'
             )
