@@ -167,10 +167,21 @@ class WorkspaceHandler(RequestHandler):
                             'Please contact your system administrator.'
             )
         except GitForbidden:
-            raise HTTPError(
-                status_code=401,
-                log_message='You\'re not authorized to access this resource.'
-            )
+            if isinstance(repository, CookiecutterRepository):
+                raise HTTPError(
+                    status_code=401,
+                    log_message='You\'re not authorized to access this template.'
+                )
+            elif isinstance(repository, PyoliteRepository):
+                raise HTTPError(
+                    status_code=401,
+                    log_message='You\'re not authorized to manage projects.'
+                )
+            else:
+                raise HTTPError(
+                    status_code=401,
+                    log_message='You\'re not authorized to access this resource.'
+                )
 
         return repository
 
