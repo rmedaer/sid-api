@@ -1,3 +1,7 @@
+"""
+This module contains schema for template handlers.
+"""
+
 TEMPLATE_NAME = {
     "type": "string",
     "minLength": 2,

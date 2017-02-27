@@ -4,15 +4,8 @@ under a Git repository. Mixing sid.api.git.GitRepository and pyolite2.Pyolite.
 """
 
 import os
-import re
 from pyolite2 import Pyolite
-from sid.api.git import (
-    GitRepository,
-    GitRepositoryNotFound,
-    GitRemoteNotFound,
-    GitRemoteDuplicate,
-    GitBranchNotFound
-)
+from sid.api.git import GitRepository
 
 MAIN_CONFIG = 'conf/gitolite.conf'
 

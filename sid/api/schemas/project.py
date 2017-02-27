@@ -1,6 +1,6 @@
-# -*- coding: utf-8 -*-
-
-""" This module contains body schema for project management handlers. """
+"""
+This module contains body schema for project management handlers.
+"""
 
 PROJECT_NAME = {
     "type": "string",

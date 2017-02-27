@@ -13,10 +13,7 @@ from cookiecutter.exceptions import (
     UnknownExtension
 )
 from sid.api.git import (
-    GitRepository,
-    GitRepositoryNotFound,
-    GitRemoteDuplicate,
-    GitBranchNotFound
+    GitRepository
 )
 
 VARS_FILE = 'cookiecutter.json'
@@ -34,6 +31,12 @@ class CookiecutterRepository(GitRepository):
         GitRepository.__init__(self, path)
 
     def validate(self, data):
+        """
+        Validate template parameters using JSON template generated from cookicutter.json
+
+        Arguments:
+        data -- Template parameters to be validated.
+        """
         schema = self.get_schema()
 
         try:
@@ -51,11 +54,14 @@ class CookiecutterRepository(GitRepository):
                             'Please contact your administrator.'
             )
 
-    def apply(self, dst_path, data={}):
+    def apply(self, dst_path, data=None):
         """
         Apply this template to given path.
         """
         assert self.is_open()
+
+        if data is None:
+            data = {}
 
         try:
             cookiecutter(
@@ -96,7 +102,7 @@ class CookiecutterRepository(GitRepository):
         # We are translating that into a standard JSON schema.
 
         try:
-            file = open(os.path.join(self.path, VARS_FILE), 'r')
+            fvars = open(os.path.join(self.path, VARS_FILE), 'r')
         except IOError:
             raise HTTPError(
                 status_code=500,
@@ -104,9 +110,8 @@ class CookiecutterRepository(GitRepository):
                             'Please contact your system administrator.' % VARS_FILE
             )
 
-
-        rc = json.loads(file.read())
-        if not isinstance(rc, dict):
+        vars_list = json.loads(fvars.read())
+        if not isinstance(vars, dict):
             raise HTTPError(
                 status_code=500,
                 log_message='Unrecognized %s format. '
@@ -118,7 +123,7 @@ class CookiecutterRepository(GitRepository):
             'required': [],
             'additionalProperties': True
         }
-        for key in rc:
+        for key in vars_list:
             schema['properties'][key] = {
                 "type": "string"
             }
@@ -129,10 +134,13 @@ class CookiecutterRepository(GitRepository):
         return schema
 
     def get_readme(self):
+        """
+        Get template README file.
+        """
         assert self.is_open()
 
         try:
-            file = open(os.path.join(self.path, README_FILE), 'r')
+            freadme = open(os.path.join(self.path, README_FILE), 'r')
         except IOError:
             raise HTTPError(
                 status_code=500,
@@ -140,4 +148,4 @@ class CookiecutterRepository(GitRepository):
                             'Please contact your system administrator.' % README_FILE
             )
 
-        return file.read()
+        return freadme.read()

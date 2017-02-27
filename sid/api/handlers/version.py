@@ -20,3 +20,9 @@ class VersionHandler(RequestHandler):
         self.write({
             'version': __version__
         })
+
+    def data_received(self, *args, **kwargs):
+        """
+        Implementation of astract data_received.
+        """
+        pass

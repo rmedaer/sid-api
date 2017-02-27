@@ -9,8 +9,8 @@ NOTE: An alternative would be to modify Gitolite to return serialized errors
 
 import re
 
-FORBIDDEN_PATTERN = '^Remote error: FATAL: \S* any \S* \S* DENIED by fallthru'
-HTTP_ERROR = '^Unexpected HTTP status code: (\d*)'
+FORBIDDEN_PATTERN = r'^Remote error: FATAL: \S* any \S* \S* DENIED by fallthru'
+HTTP_ERROR = r'^Unexpected HTTP status code: (\d*)'
 
 class GitForbidden(Exception):
     """
@@ -49,6 +49,12 @@ class GitAutomaticMergeNotAvailable(Exception):
     pass
 
 def handle_git_error(error):
+    """
+    Translate errors from Gitolite response into well known exceptions.
+
+    Arguments:
+    error -- Gitolite error.
+    """
     http_matches = re.match(HTTP_ERROR, error.message)
     if http_matches and int(http_matches.group(1)) == 401:
         return GitForbidden()

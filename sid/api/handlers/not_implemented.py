@@ -23,6 +23,6 @@ class NotImplementedHandler(RequestHandler):
 
     def data_received(self, *args, **kwargs):
         """
-        TODO
+        Implementation of astract data_received.
         """
         pass

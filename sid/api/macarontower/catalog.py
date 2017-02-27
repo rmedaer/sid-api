@@ -41,8 +41,8 @@ class Catalog(object):
         Open macarontower.json, parse it and validate using schema.
         """
         try:
-            with open(os.path.join(self.path, __macarontower_file__), 'r') as file:
-                body = json.loads(file.read())
+            with open(os.path.join(self.path, __macarontower_file__), 'r') as fcatalog:
+                body = json.loads(fcatalog.read())
                 jsonschema.validate(body, __macarontower_schema__)
                 self.version = body['version']
 
@@ -73,14 +73,12 @@ class Catalog(object):
 
     def get_format(self, uri):
         """
-        Get format of given cconfiguration URI. It also substitutes known format.
+        Get format of given configuration URI.
+
+        Arguments:
+        uri -- Configuration path.
         """
-        format = self.data[uri]['format']
-
-        if format == 'yml':
-            format = 'yaml'
-
-        return format
+        return self.data[uri]['format']
 
     def get_metadata(self, uri):
         """
@@ -107,7 +105,7 @@ class Catalog(object):
         """
         self.assert_uri(uri)
 
-        file = self.safe_path(self.data[uri]['file'])
+        path = self.safe_path(self.data[uri]['file'])
 
         # Get schema from URI
         schema = self.get_schema(uri)
@@ -117,7 +115,7 @@ class Catalog(object):
             jsonschema.validate(data, schema)
 
         # Write well formatted data
-        anyconfig.dump(data, file, ac_parser=self.get_format(uri), ac_safe=True)
+        anyconfig.dump(data, path, ac_parser=self.get_format(uri), ac_safe=True)
 
     def get_data(self, uri):
         """
@@ -128,11 +126,11 @@ class Catalog(object):
         """
         self.assert_uri(uri)
 
-        file = self.safe_path(self.data[uri]['file'])
+        path = self.safe_path(self.data[uri]['file'])
 
         try:
-            return anyconfig.load(file, ac_parser=self.get_format(uri))
-        except IOError as err:
+            return anyconfig.load(path, ac_parser=self.get_format(uri))
+        except IOError:
             raise exceptions.ConfigurationLoadingError()
 
     def get_schema(self, uri):
@@ -147,30 +145,30 @@ class Catalog(object):
         if not self.data[uri].get('schema'):
             return {}
 
-        schema = self.safe_path(self.data[uri]['schema'])
+        path = self.safe_path(self.data[uri]['schema'])
 
         try:
-            with open(schema, 'r') as file:
+            with open(path, 'r') as fschema:
                 # TODO after loading schema we should lint it (self-validation)
-                return json.loads(file.read())
+                return json.loads(fschema.read())
         except IOError:
             raise exceptions.SchemaLoadingError()
 
-    def safe_path(self, file):
+    def safe_path(self, path):
         """
         Create safe path from given file with options passed to Catalog object.
         It's using 'allow_unsafe' and 'absolute_path' to refactor input file.
 
         Arguments:
-        file -- Path of file to review.
+        path -- Path of file to review.
         """
         # If file has absolute path that we not authorize, raise an error
-        if os.path.isabs(file):
+        if os.path.isabs(path):
             if not self.allow_absolute or not self.allow_unsafe:
                 raise AssertionError('Not authorized to load absolute file')
         else:
-            file = os.path.join(self.path, file)
-            if not os.path.realpath(file).startswith(self.path) and not self.allow_unsafe:
-                raise AssertionError('Unsafe path: %s' % file)
+            path = os.path.join(self.path, path)
+            if not os.path.realpath(path).startswith(self.path) and not self.allow_unsafe:
+                raise AssertionError('Unsafe path: %s' % path)
 
-        return file
+        return path

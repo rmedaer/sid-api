@@ -3,6 +3,9 @@ This module contains handler which manage a template collection from Gitolite
 configuration.
 """
 
+from pyolite2 import RepositoryNotFoundError
+from tornado.web import HTTPError
+
 # Local imports
 import sid.api.http as http
 import sid.api.auth as auth

@@ -2,6 +2,9 @@
 This module contains exceptions raised by macarontower module.
 """
 
+# The following imports are there to help development. It's a kind of symlink
+# of known errors from anyconfig and jsonschema modules.
+# pylint: disable=W0611
 from anyconfig import UnknownParserTypeError
 from jsonschema import ValidationError, SchemaError
 

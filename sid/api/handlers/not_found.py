@@ -20,3 +20,9 @@ class NotFoundHandler(RequestHandler):
             status_code=404,
             log_message='Resource not found.'
         )
+
+    def data_received(self, *args, **kwargs):
+        """
+        Implementation of astract data_received.
+        """
+        pass

@@ -1,3 +1,7 @@
+"""
+This module contains schemas for API configuration file.
+"""
+
 CONFIGURATION_SCHEMA = {
     "type": "object",
     "properties": {

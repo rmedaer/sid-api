@@ -2,10 +2,13 @@
 This module contains a generic handler to abstract user workspace.
 """
 
+# Global imports
 import os
+from tornado.web import RequestHandler, HTTPError
+
+# Local imports
 import sid.api.http as http
 import sid.api.auth as auth
-from tornado.web import RequestHandler, HTTPError
 from sid.api import __gitolite_admin__, __projects_prefix__, __templates_prefix__
 from sid.api.pyolite import PyoliteRepository
 from sid.api.cookiecutter import CookiecutterRepository
@@ -40,7 +43,7 @@ class WorkspaceHandler(RequestHandler):
         self.prepare_workspace(*args, **kwargs)
 
     @auth.require_authentication()
-    def prepare_workspace(self, *args, **kwargs):
+    def prepare_workspace(self, **kwargs):
         """
         Change working directory to user's workspace.
         Since we need to play with per user directory, authentication is
@@ -69,7 +72,7 @@ class WorkspaceHandler(RequestHandler):
         os.chdir(user_workspace_dir)
 
     @auth.require_authentication()
-    def prepare_pyolite(self, *args, **kwargs):
+    def prepare_pyolite(self, **kwargs):
         """
         Prepare Pyolite repository.
         """
@@ -88,7 +91,7 @@ class WorkspaceHandler(RequestHandler):
         return pyolite
 
     @auth.require_authentication()
-    def prepare_project(self, project_name, *args, **kwargs):
+    def prepare_project(self, project_name, **kwargs):
         """
         Prepare a project in user workspace from its name.
 
@@ -109,7 +112,7 @@ class WorkspaceHandler(RequestHandler):
         return project
 
     @auth.require_authentication()
-    def prepare_template(self, template_name, *args, **kwargs):
+    def prepare_template(self, template_name, **kwargs):
         """
         Prepare a template in user workspace from its name.
 
@@ -129,8 +132,9 @@ class WorkspaceHandler(RequestHandler):
 
         return template
 
+    # pylint: disable=R0201
     @auth.require_authentication()
-    def prepare_repository(self, repository, remote_url, *args, **kwargs):
+    def prepare_repository(self, repository, remote_url, **kwargs):
         """
         Try to clone a given repository into user's workspace.
 
@@ -194,5 +198,6 @@ class WorkspaceHandler(RequestHandler):
 
     def data_received(self, *args, **kwargs):
         """
+        Implementation of astract data_received.
         """
         pass

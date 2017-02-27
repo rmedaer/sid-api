@@ -1,3 +1,7 @@
+"""
+This module contains JSON encoder for SID API.
+"""
+
 from json import JSONEncoder
 from pyolite2 import Repository
 from sid.api import __projects_prefix__, __templates_prefix__

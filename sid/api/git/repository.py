@@ -3,6 +3,7 @@ This module contains GitRepository class. It exposes usual commands on Git
 repository with pygit2 library.
 """
 
+import os
 from pygit2 import ( # pylint: disable=E0611
     Repository,
     GitError,
@@ -18,7 +19,6 @@ from sid.api.git.errors import (
     GitRepositoryNotFound,
     GitRemoteNotFound,
     GitBranchNotFound,
-    GitRemoteDuplicate,
     GitAutomaticMergeNotAvailable,
     handle_git_error
 )
@@ -54,29 +54,29 @@ class GitRepository(object):
         except KeyError:
             raise GitRepositoryNotFound()
 
-    def add_file(self, file):
+    def add_file(self, path):
         """
         Add given file to current index.
 
         Keyword arguments:
-        file -- A string which contains relative path of file to add.
+        path -- A string which contains relative path of file to add.
         """
         assert self.is_open()
 
-        self.repo.index.add(self.resolve_path(file))
+        self.repo.index.add(self.resolve_path(path))
         self.repo.index.write()
 
-    def add_files(self, files):
+    def add_files(self, paths):
         """
         Add given files to current index.
 
         Keyword arguments:
-        files -- An array of string which contains files to add
+        paths -- An array of string which contains files to add
         """
-        for file in files:
-            self.add_file(file)
+        for path in paths:
+            self.add_file(path)
 
-    def commit(self, message, user=None, parents=None, allow_empty=False):
+    def commit(self, message, user=None, parents=None, allow_empty=False): # pylint: disable=W0613
         """
         Commit changes.
 
@@ -88,6 +88,7 @@ class GitRepository(object):
         assert self.is_open()
 
         # TODO Make sure we have something to commit if allow_empty is False
+        #      Don't forget to remove pylint exception W0613
 
         # Use default signature if user is not given
         if user is None:
@@ -266,19 +267,19 @@ class GitRepository(object):
 
         self.callbacks = callbacks
 
-    def resolve_path(self, file):
+    def resolve_path(self, path):
         """
         Resolve file to relative Git path.
 
         Keyword arguments:
-        file -- Path to be resolved
+        path -- Path to be resolved
         """
         assert self.is_open()
 
-        if os.path.isabs(file):
-            return os.path.relative(file, self.repo.workdir)
+        if os.path.isabs(path):
+            return os.path.relpath(path, self.repo.workdir)
         else:
-            return file
+            return path
 
     def reset_hard(self, oid):
         """

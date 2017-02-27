@@ -51,7 +51,7 @@ class SettingsCollectionHandler(WorkspaceHandler):
 
     @auth.require_authentication()
     @http.available_content_type(['application/json'])
-    def get(self, project_name, *args, **kwargs):
+    def get(self, _, *args, **kwargs):
         """
         Get list of available settings.
 
@@ -97,9 +97,12 @@ class SettingsHandler(WorkspaceHandler):
         'application/schema+json',
         'application/json'
     ])
-    def get(self, project_name, settings_path, *args, **kwargs):
+    def get(self, _, settings_path, *args, **kwargs):
         """
         Get parameter set from its path.
+
+        Arguments:
+        _ (project_name) -- Tackled by prepare method.
 
         Example:
         > GET /projects/example/settings/production HTTP/1.1
@@ -145,8 +148,20 @@ class SettingsHandler(WorkspaceHandler):
     @http.available_content_type(['application/json'])
     @http.available_content_type(['application/json'])
     @http.parse_json_body()
-    def put(self, project_name, settings_path, *args, **kwargs):
+    def put(self, _, settings_path, *args, **kwargs):
         """
+        Update project settings.
+
+        Arguments:
+        _ (project_name) -- Tackled by prepare method.
+        settings_path -- Settings to modify.
+
+        Example:
+        > PUT /projects/example/settings/production HTTP/1.1
+        > Accept: */*
+        > Content-Type: application/json
+        > Content-Length: ???
+        >
         """
         try:
             # Write data to configuration file using macarontower
