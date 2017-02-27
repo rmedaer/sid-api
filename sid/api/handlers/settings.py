@@ -10,6 +10,7 @@ import sid.api.auth as auth
 from sid.api.handlers.workspace import WorkspaceHandler
 from sid.api.macarontower import Catalog
 from sid.api.macarontower.exceptions import (
+    CatalogFormatError,
     CatalogNotFoundError,
     UnknownParserTypeError,
     ConfigurationNotFoundError,
@@ -153,6 +154,11 @@ class SettingsHandler(WorkspaceHandler):
 
             # Commit all changes made in Git repository
             self.project.commit_all('Modified configuration: %s' % settings_path)
+        except CatalogFormatError as cfe:
+            raise HTTPError(
+                status_code=500,
+                log_message='Malformed settings catalog: %s' % cfe.message
+            )
         except ValidationError as vlde:
             raise HTTPError(
                 status_code=400,

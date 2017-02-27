@@ -52,7 +52,7 @@ class Catalog(object):
                 else:
                     raise exceptions.UnknownCatalogVersionError()
         except jsonschema.ValidationError as err:
-            raise exceptions.CatalogFormatError(err)
+            raise exceptions.CatalogFormatError(err.message)
         except jsonschema.SchemaError:
             raise AssertionError('Error in macarontower schema !')
         except IOError:
