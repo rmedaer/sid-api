@@ -15,7 +15,7 @@ from pyolite2 import (
 # Local imports
 import sid.api.http as http
 import sid.api.auth as auth
-from sid.api import __projects_prefix__, __public_key__
+from sid.api import __projects_prefix__
 from sid.api.git import GitForbidden, GitAutomaticMergeNotAvailable
 from sid.api.schemas import PROJECT_SCHEMA, PROJECT_PATCH_SCHEMA
 from sid.api.handlers.workspace import WorkspaceHandler
@@ -52,7 +52,7 @@ class ProjectCollectionHandler(WorkspaceHandler):
                     for project in self.pyolite.repos
                     if project.name.startswith(__projects_prefix__)])
 
-    @auth.require_authentication(__public_key__)
+    @auth.require_authentication()
     @http.accepted_content_type(['application/json'])
     @http.available_content_type(['application/json'])
     @http.parse_json_body(PROJECT_SCHEMA)
@@ -124,7 +124,7 @@ class ProjectHandler(WorkspaceHandler):
         super(ProjectHandler, self).prepare()
         self.pyolite = self.prepare_pyolite()
 
-    @auth.require_authentication(__public_key__)
+    @auth.require_authentication()
     @http.available_content_type(['application/json'])
     def get(self, name, *args, **kwargs):
         """
@@ -143,7 +143,7 @@ class ProjectHandler(WorkspaceHandler):
                 log_message='Project not found.'
             )
 
-    @auth.require_authentication(__public_key__)
+    @auth.require_authentication()
     @http.available_content_type(['application/json'])
     @http.accepted_content_type(['application/json'])
     @http.parse_json_body(PROJECT_SCHEMA)
@@ -198,7 +198,7 @@ class ProjectHandler(WorkspaceHandler):
         # Return updated repository
         self.write(repo)
 
-    @auth.require_authentication(__public_key__)
+    @auth.require_authentication()
     @http.available_content_type(['application/json'])
     @http.accepted_content_type(['application/json'])
     @http.parse_json_body(PROJECT_PATCH_SCHEMA)
@@ -248,7 +248,7 @@ class ProjectHandler(WorkspaceHandler):
         # Return updated repository
         self.write(repo)
 
-    @auth.require_authentication(__public_key__)
+    @auth.require_authentication()
     def delete(self, name, *args, **kwargs):
         """
         Delete a project.
@@ -299,7 +299,7 @@ class ProjectDeploymentHandler(WorkspaceHandler):
         """
         super(ProjectDeploymentHandler, self).prepare()
 
-    @auth.require_authentication(__public_key__)
+    @auth.require_authentication()
     def put(self, project_name, *args, **kwargs):
         """
         Deploy local changes.

@@ -8,7 +8,9 @@ import jsonschema
 from tornado.web import HTTPError
 from cookiecutter.main import cookiecutter
 from cookiecutter.exceptions import (
-    NonTemplatedInputDirException
+    NonTemplatedInputDirException,
+    UndefinedVariableInTemplate,
+    UnknownExtension
 )
 from sid.api.git import (
     GitRepository,
@@ -67,9 +69,20 @@ class CookiecutterRepository(GitRepository):
             )
         except NonTemplatedInputDirException as err:
             raise HTTPError(
-                status_code=503,
-                log_message='Malformed template directory: %s. '
-                            'Please contact your system administrator.' % err.__class__.__name__
+                status_code=500,
+                log_message='Malformed template directory: %s.' % err.__class__.__name__
+            )
+        except UndefinedVariableInTemplate as err:
+            raise HTTPError(
+                status_code=500,
+                log_message='An undefined variable was found while installing '
+                            'the template. %s' % err.message
+            )
+        except UnknownExtension as err:
+            raise HTTPError(
+                status_code=500,
+                log_message='An extension was missing while installing '
+                            'the template. %s' % err.message
             )
 
     def get_schema(self):
@@ -86,7 +99,7 @@ class CookiecutterRepository(GitRepository):
             file = open(os.path.join(self.path, VARS_FILE), 'r')
         except IOError:
             raise HTTPError(
-                status_code=503,
+                status_code=500,
                 log_message='Unable to read template file: %s. '
                             'Please contact your system administrator.' % VARS_FILE
             )
@@ -95,7 +108,7 @@ class CookiecutterRepository(GitRepository):
         rc = json.loads(file.read())
         if not isinstance(rc, dict):
             raise HTTPError(
-                status_code=503,
+                status_code=500,
                 log_message='Unrecognized %s format. '
                             'Please contact your system administrator.' % VARS_FILE
             )
@@ -122,7 +135,7 @@ class CookiecutterRepository(GitRepository):
             file = open(os.path.join(self.path, README_FILE), 'r')
         except IOError:
             raise HTTPError(
-                status_code=503,
+                status_code=500,
                 log_message='Unable to read template README  (%s). '
                             'Please contact your system administrator.' % README_FILE
             )

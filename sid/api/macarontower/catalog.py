@@ -42,17 +42,17 @@ class Catalog(object):
         """
         try:
             with open(os.path.join(self.path, __macarontower_file__), 'r') as file:
-                data = json.loads(file.read())
-                jsonschema.validate(data, __macarontower_schema__)
-                self.version = data['version']
+                body = json.loads(file.read())
+                jsonschema.validate(body, __macarontower_schema__)
+                self.version = body['version']
 
-                if self.version == '1.0.0':
-                    jsonschema.validate(data, __macarontower_schema_1_0_0__)
-                    self.data = data['data']
+                if self.version.startswith('1.'):
+                    jsonschema.validate(body, __macarontower_schema_1_0_0__)
+                    self.data = body['data']
                 else:
                     raise exceptions.UnknownCatalogVersionError()
         except jsonschema.ValidationError as err:
-            raise exceptions.CatalogFormatError(err)
+            raise exceptions.CatalogFormatError(err.message)
         except jsonschema.SchemaError:
             raise AssertionError('Error in macarontower schema !')
         except IOError:

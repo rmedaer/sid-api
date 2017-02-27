@@ -7,10 +7,10 @@ from tornado.web import HTTPError
 # Local imports
 import sid.api.http as http
 import sid.api.auth as auth
-from sid.api import __public_key__
 from sid.api.handlers.workspace import WorkspaceHandler
 from sid.api.macarontower import Catalog
 from sid.api.macarontower.exceptions import (
+    CatalogFormatError,
     CatalogNotFoundError,
     UnknownParserTypeError,
     ConfigurationNotFoundError,
@@ -44,12 +44,12 @@ class SettingsCollectionHandler(WorkspaceHandler):
             self.catalog = Catalog(self.project.path)
         except CatalogNotFoundError:
             raise HTTPError(
-                status_code=503,
+                status_code=500,
                 log_message='Failed to read settings catalog. '
                             'Please contact your system administrator.'
             )
 
-    @auth.require_authentication(__public_key__)
+    @auth.require_authentication()
     @http.available_content_type(['application/json'])
     def get(self, project_name, *args, **kwargs):
         """
@@ -86,12 +86,12 @@ class SettingsHandler(WorkspaceHandler):
             self.catalog = Catalog(self.project.path)
         except CatalogNotFoundError:
             raise HTTPError(
-                status_code=503,
+                status_code=500,
                 log_message='Failed to read settings catalog. '
                             'Please contact your system administrator.'
             )
 
-    @auth.require_authentication(__public_key__)
+    @auth.require_authentication()
     @http.available_content_type([
         'application/vnd.sid.metadata+json',
         'application/schema+json',
@@ -141,7 +141,7 @@ class SettingsHandler(WorkspaceHandler):
         except ConfigurationLoadingError:
             self.write({})
 
-    @auth.require_authentication(__public_key__)
+    @auth.require_authentication()
     @http.available_content_type(['application/json'])
     @http.available_content_type(['application/json'])
     @http.parse_json_body()
@@ -154,6 +154,11 @@ class SettingsHandler(WorkspaceHandler):
 
             # Commit all changes made in Git repository
             self.project.commit_all('Modified configuration: %s' % settings_path)
+        except CatalogFormatError as cfe:
+            raise HTTPError(
+                status_code=500,
+                log_message='Malformed settings catalog: %s' % cfe.message
+            )
         except ValidationError as vlde:
             raise HTTPError(
                 status_code=400,
