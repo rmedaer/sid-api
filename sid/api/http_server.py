@@ -12,27 +12,30 @@ from tornado.httpserver import HTTPServer
 from tornado.web import Application
 from tornado.ioloop import IOLoop
 from jsonschema import validate, ValidationError
-from sid.api.handlers import (
+
+from sid.api.handlers.misc import (
     NotFoundHandler,
-    ProjectHandler,
-    ProjectCollectionHandler,
-    ProjectTemplateHandler,
-    ProjectDeploymentHandler,
-    SettingsHandler,
-    SettingsCollectionHandler,
-    TemplateCollectionHandler,
-    TemplateHandler,
     VersionHandler
 )
+from sid.api.handlers.project import (
+    ProjectCollectionHandler,
+    ProjectHandler,
+    ProjectDeploymentHandler
+)
+from sid.api.handlers.template import (
+    TemplateCollectionHandler,
+    TemplateHandler
+)
+
 from sid.api.schemas import CONFIGURATION_SCHEMA
 
 def create_app(settings):
     """ Create a Tornado application. """
 
     return Application([
-        (r"/projects/(\S+)/settings/(\S+)", SettingsHandler),
-        (r"/projects/(\S+)/settings", SettingsCollectionHandler),
-        (r"/projects/(\S+)/template", ProjectTemplateHandler),
+        # (r"/projects/(\S+)/settings/(\S+)", SettingsHandler),
+        # (r"/projects/(\S+)/settings", SettingsCollectionHandler),
+        # (r"/projects/(\S+)/template", ProjectTemplateHandler),
         (r"/projects/(\S+)/deploy", ProjectDeploymentHandler),
         (r"/projects/(\S+)", ProjectHandler),
         (r"/projects", ProjectCollectionHandler),
