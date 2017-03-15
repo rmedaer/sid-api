@@ -27,6 +27,9 @@ from sid.api.handlers.template import (
     TemplateHandler,
     ProjectTemplateHandler
 )
+from sid.api.handlers.settings import (
+    SettingsCollectionHandler
+)
 
 from sid.api.schemas import CONFIGURATION_SCHEMA
 
@@ -35,7 +38,7 @@ def create_app(settings):
 
     return Application([
         # (r"/projects/(\S+)/settings/(\S+)", SettingsHandler),
-        # (r"/projects/(\S+)/settings", SettingsCollectionHandler),
+        (r"/projects/(\S+)/settings", SettingsCollectionHandler),
         (r"/projects/(\S+)/template", ProjectTemplateHandler),
         (r"/projects/(\S+)/deploy", ProjectDeploymentHandler),
         (r"/projects/(\S+)", ProjectHandler),
