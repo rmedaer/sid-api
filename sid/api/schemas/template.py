@@ -1,3 +1,7 @@
+"""
+This module contains schema for template handlers.
+"""
+
 TEMPLATE_NAME = {
     "type": "string",
     "minLength": 2,
@@ -10,6 +14,9 @@ TEMPLATE_SCHEMA = {
         "name": {
             "$ref": "#/definitions/template-name"
         },
+        "version": {
+            "type": "string"
+        },
         "data": {
             "type": "object",
             "additionalProperties": True
@@ -17,6 +24,7 @@ TEMPLATE_SCHEMA = {
     },
     "required": [
         "name",
+        "version",
         "data"
     ],
     "additionalProperties": False,

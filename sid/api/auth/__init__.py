@@ -15,9 +15,8 @@ from jwt.exceptions import (
     InvalidAlgorithmError,
     InvalidTokenError
 )
-from tornado.web import HTTPError, RequestHandler
-from oauth_callback import OAuthCallback
 from jwt.contrib.algorithms.pycrypto import RSAAlgorithm
+from tornado.web import HTTPError, RequestHandler
 
 __jwt_algorithms__ = {
     'RS256': RSAAlgorithm(RSAAlgorithm.SHA256),

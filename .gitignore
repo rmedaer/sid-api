@@ -3,3 +3,5 @@
 tests/__pycache__
 tests/fixtures/gitolite
 docs/.build
+*.egg-info
+build

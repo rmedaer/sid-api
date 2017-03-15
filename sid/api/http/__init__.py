@@ -7,9 +7,9 @@ import posixpath
 import json
 import urlparse
 
-from rfc7231 import accepted_content_type, available_content_type
-from rfc7159 import parse_json_body
-from encoder import Encoder
+from sid.api.http.rfc7231 import accepted_content_type, available_content_type
+from sid.api.http.rfc7159 import parse_json_body
+from sid.api.http.encoder import Encoder
 
 def join_url_path(url, *paths):
     """
@@ -43,7 +43,7 @@ def json_serializer(handler_class):
             """
             # TODO What happening on encoding failure ? Do we have to handle that
             # with a HTTPError 500 ?
-            if self._headers['Content-Type'] == 'application/json':
+            if self._headers['Content-Type'] == 'application/json': # pylint: disable=W0212
                 return handler_write(self, json.dumps(chunk, cls=Encoder, sort_keys=True), *args, **kwargs)
             else:
                 return handler_write(self, chunk, *args, **kwargs)
@@ -67,7 +67,7 @@ def json_error_handling(handler_class):
         This function generate the monkey patch.
         """
 
-        def write_error(self, status_code, *args, **kwargs):
+        def write_error(self, status_code, **kwargs):
             """
             Write error replacement procedure. Analyze the HTTPError and generate
             standardize JSON content.
