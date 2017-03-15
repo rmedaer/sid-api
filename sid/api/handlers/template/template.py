@@ -38,7 +38,7 @@ class TemplateHandler(AbstractWarehouseHandler, AbstractTemplateHandler):
 
         # Get repository
         try:
-            repo = self.warehouse.repos[__templates_prefix__ + template_name]
+            self.warehouse.repos[__templates_prefix__ + template_name]
         except pyolite2.errors.RepositoryNotFoundException:
             raise HTTPError(
                 status_code=404,
@@ -48,8 +48,13 @@ class TemplateHandler(AbstractWarehouseHandler, AbstractTemplateHandler):
         # Load template
         self.prepare_template(template_name)
 
+        # TODO We should checkout in given version (or master if not specified)
+
         if output_content_type == 'application/json':
-            self.write(repo)
+            self.write({
+                'name': self.template.get_name(),
+                'versions': self.template.get_versions()
+            })
 
         elif output_content_type == 'application/schema+json':
             try:

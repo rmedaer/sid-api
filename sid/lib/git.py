@@ -9,6 +9,7 @@ import pygit2
 
 __forbidden_pattern__ = r'^Remote error: FATAL: \S* any \S* \S* DENIED by fallthru'
 __http_error__ = r'^Unexpected HTTP status code: (\d*)'
+__tag_prefix__ = u'refs/tags/'
 
 class RepositoryNotFoundException(Exception):
     """
@@ -105,6 +106,14 @@ class Repository(object):# pylint: disable=R0904
         Return a boolean which define if repository has been opened or not.
         """
         return self.repo is not None
+
+    def is_empty(self):
+        """
+        Return True if repository is empty.
+        """
+        self.assert_is_open()
+
+        return self.repo.head_is_unborn
 
     def assert_is_open(self):
         """
@@ -214,6 +223,11 @@ class Repository(object):# pylint: disable=R0904
         username -- Author username.
         email -- Author email.
         """
+        # First we change the config for this repository. It's fixing all
+        # the issues with worktrees, submodules, etc.
+        self.repo.config['user.name'] = username
+        self.repo.config['user.email'] = email
+        # Then we set signature in our wrapper mechanism
         self.sign = pygit2.Signature(username, email) # pylint: disable=E1101
 
     def get_remote(self, remote_name):
@@ -361,6 +375,8 @@ class Repository(object):# pylint: disable=R0904
         remote_name -- Remote to be pushed.
         branch_name -- Branch to be pushed.
         """
+        self.assert_is_open()
+
         remote = self.get_remote(remote_name)
         try:
             remote.push([self.get_branch(branch_name).name], callbacks=self.callbacks)
@@ -373,6 +389,15 @@ class Repository(object):# pylint: disable=R0904
 
             raise err
 
+    def checkout(self, ref_name):
+        """
+        Checkout Git repository in given reference.
+
+        Arguments:
+        ref -- Reference to checkout.
+        """
+        self.repo.checkout(self.repo.lookup_reference(ref_name))
+
     def ahead_behind(self, remote_name='origin', branch_name='master'):
         """
         Calculate how many different commits are in the non-common parts of
@@ -382,7 +407,7 @@ class Repository(object):# pylint: disable=R0904
         remote_name -- Targeted remote (optional, default='origin')
         branch_name -- Remote branch (optional, default='origin')
         """
-        assert self.is_open()
+        self.assert_is_open()
 
         # First fetch changes from remote
         self.fetch_all(remote_name)
@@ -400,12 +425,19 @@ class Repository(object):# pylint: disable=R0904
         Keyword arguments:
         oid -- Targeted OID.
         """
-        assert self.is_open()
+        self.assert_is_open()
 
         if isinstance(oid, basestring):
             oid = self.repo.lookup_reference(oid).target
 
         self.repo.reset(oid, pygit2.GIT_RESET_HARD) # pylint: disable=E1101
+
+    def get_tags(self):
+        """
+        List tags of this repository.
+        """
+        # NOTE We are listing here the references... what about GIT_OBJ_TAG ???
+        return [tag[len(__tag_prefix__):] for tag in self.repo.listall_references() if tag.startswith(__tag_prefix__)]
 
     @staticmethod
     def handle_git_error(error):

@@ -3,12 +3,15 @@ This module contains SID Template object.
 """
 
 import os
+import re
 import json
 import collections
+import urlparse
 import jsonschema
-from sid.lib.git import Repository
+from sid.lib.git import Repository, __tag_prefix__
 
-__cookiecutter_file__ = 'cookiecutter.json'
+__cookiecutter_file__ = u'cookiecutter.json'
+__default_version_pattern__ = r'\S'
 
 class TemplateException(Exception):
     """
@@ -21,11 +24,12 @@ class Template(Repository):
     Milhoja/CookieCutter template behind a Git repository.
     """
 
-    def __init__(self, path):
+    def __init__(self, path, version_pattern=__default_version_pattern__):
         """
         Construct a template repository.
         """
         super(Template, self).__init__(path)
+        self.version_pattern = version_pattern
 
     def validate(self, data):
         """
@@ -40,6 +44,39 @@ class Template(Repository):
         TemplateException
         """
         jsonschema.validate(data, self.get_schema())
+
+    def get_name(self):
+        """
+        Get template name from path.
+        """
+        # Analyze template source; get parsed url result
+        url = urlparse.urlparse(self.path)
+
+        # Compute file name from url path
+        return os.path.splitext(os.path.basename(url.path))[0]
+
+    def get_versions(self):
+        """
+        List available version of a given template.
+        """
+        self.assert_is_open()
+
+        prog = re.compile(self.version_pattern)
+        return [tag for tag in self.get_tags() if prog.match(tag)]
+
+    def checkout_version(self, version):
+        """
+        Checkout template local copy into given version.
+
+        Arguments:
+        version -- Reference to checkout.
+        """
+        self.assert_is_open()
+
+        if version not in self.get_versions():
+            raise TemplateException('Given version not available')
+
+        self.checkout(__tag_prefix__ + version)
 
     def get_schema(self):
         """
@@ -66,7 +103,6 @@ class Template(Repository):
                 # Build base schema
                 schema = {
                     'properties': {},
-                    'required': [],
                     'additionalProperties': True
                 }
 
