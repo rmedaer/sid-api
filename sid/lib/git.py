@@ -412,11 +412,21 @@ class Repository(object):# pylint: disable=R0904
         # First fetch changes from remote
         self.fetch_all(remote_name)
 
+        # Get head target
+        try:
+            local_id = self.repo.revparse_single('HEAD').id
+        except KeyError:
+            raise Exception('Failed to fetch HEAD reference')
+
+        # Get remote target
+        try:
+            remote_id = self.repo.revparse_single('refs/remotes/%s/%s' % (remote_name, branch_name)).id
+        except KeyError:
+            # If there is not any remote target, we sum number of commits ahead
+            return sum(1 for _ in self.repo.walk(self.repo.head.target, pygit2.GIT_SORT_TOPOLOGICAL)), 0 # pylint: disable=E1101
+
         # Calculate diff
-        return self.repo.ahead_behind(
-            self.repo.revparse_single('HEAD').id,
-            self.repo.revparse_single('refs/remotes/%s/%s' % (remote_name, branch_name)).id
-        )
+        return self.repo.ahead_behind(local_id, remote_id)
 
     def reset_hard(self, oid):
         """
