@@ -3,6 +3,7 @@ SettingsCollectionHandler module (see handler documentation)
 """
 
 import os
+import json
 from whiriho import Whiriho
 from whiriho.errors import CatalogNotFoundException, WhirihoException
 from tornado.web import HTTPError
@@ -37,9 +38,9 @@ class SettingsCollectionHandler(AbstractProjectHandler):
         try:
             whiriho = Whiriho(os.path.join(self.project.path, __whiriho_catalog__))
             whiriho.load()
-            self.write(whiriho.get_paths())
+            self.write(json.dumps(whiriho.get_paths()))
         except CatalogNotFoundException:
-            self.write([])
+            self.write(json.dumps([]))
         except WhirihoException as error:
             raise HTTPError(
                 status_code=500,
