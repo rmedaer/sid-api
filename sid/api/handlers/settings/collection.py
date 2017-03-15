@@ -22,7 +22,7 @@ class SettingsCollectionHandler(AbstractProjectHandler):
 
     @auth.require_authentication()
     @http.available_content_type(['application/json'])
-    def get(self, project, *args, **kwargs):
+    def get(self, project_name, *args, **kwargs):
         """
         Get list of available settings.
 
@@ -32,7 +32,7 @@ class SettingsCollectionHandler(AbstractProjectHandler):
         >
         """
 
-        self.prepare_project(project)
+        self.prepare_project(project_name)
 
         try:
             whiriho = Whiriho(os.path.join(self.project.path, __whiriho_catalog__))

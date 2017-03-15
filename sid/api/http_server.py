@@ -28,6 +28,7 @@ from sid.api.handlers.template import (
     ProjectTemplateHandler
 )
 from sid.api.handlers.settings import (
+    SettingsHandler,
     SettingsCollectionHandler
 )
 
@@ -37,7 +38,7 @@ def create_app(settings):
     """ Create a Tornado application. """
 
     return Application([
-        # (r"/projects/(\S+)/settings/(\S+)", SettingsHandler),
+        (r"/projects/(\S+)/settings/(\S+)", SettingsHandler),
         (r"/projects/(\S+)/settings", SettingsCollectionHandler),
         (r"/projects/(\S+)/template", ProjectTemplateHandler),
         (r"/projects/(\S+)/deploy", ProjectDeploymentHandler),
