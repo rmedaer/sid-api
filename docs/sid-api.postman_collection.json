@@ -64,7 +64,7 @@
 				{
 					"name": "Get API version",
 					"request": {
-						"url": "http://{{host}}/api/version",
+						"url": "http://{{host}}:{{port}}{{prefix}}/version",
 						"method": "GET",
 						"header": [
 							{
@@ -90,7 +90,7 @@
 				{
 					"name": "List projects",
 					"request": {
-						"url": "http://{{host}}/api/projects",
+						"url": "http://{{host}}:{{port}}{{prefix}}/projects",
 						"method": "GET",
 						"header": [
 							{
@@ -107,7 +107,7 @@
 				{
 					"name": "Get project permissions",
 					"request": {
-						"url": "http://{{host}}/api/projects/my-project",
+						"url": "http://{{host}}:{{port}}{{prefix}}/projects/my-project",
 						"method": "GET",
 						"header": [
 							{
@@ -124,7 +124,7 @@
 				{
 					"name": "Add a new project",
 					"request": {
-						"url": "http://{{host}}/api/projects",
+						"url": "http://{{host}}:{{port}}{{prefix}}/projects",
 						"method": "POST",
 						"header": [
 							{
@@ -149,7 +149,7 @@
 				{
 					"name": "Modify project permissions",
 					"request": {
-						"url": "http://{{host}}/api/projects/my-project",
+						"url": "http://{{host}}:{{port}}{{prefix}}/projects/my-project",
 						"method": "PUT",
 						"header": [
 							{
@@ -165,7 +165,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n\t\"name\": \"my-example\",\n\t\"rules\": [\n\t\t{\n\t\t\t\"perm\": \"RW\",\n\t\t\t\"users\": [\n\t\t\t\t\"@all\"\n\t\t\t]\n\t\t}\n\t]\n}"
+							"raw": "{\n\t\"name\": \"my-project\",\n\t\"rules\": [\n\t\t{\n\t\t\t\"perm\": \"RW\",\n\t\t\t\"users\": [\n\t\t\t\t\"@all\"\n\t\t\t]\n\t\t}\n\t]\n}"
 						},
 						"description": ""
 					},
@@ -174,7 +174,7 @@
 				{
 					"name": "Delete an existing project",
 					"request": {
-						"url": "http://{{host}}/api/projects/my-project",
+						"url": "http://{{host}}:{{port}}{{prefix}}/projects/my-project",
 						"method": "DELETE",
 						"header": [
 							{
@@ -192,9 +192,9 @@
 					"response": []
 				},
 				{
-					"name": "Apply a template on given project",
+					"name": "Install a template on given project",
 					"request": {
-						"url": "http://{{host}}/api/projects/my-project/template",
+						"url": "http://{{host}}:{{port}}{{prefix}}/projects/my-project/template",
 						"method": "PUT",
 						"header": [
 							{
@@ -210,6 +210,26 @@
 						],
 						"body": {
 							"mode": "raw",
+							"raw": "{\n\t\"name\": \"my-template\",\n\t\"version\": \"releases/1.0.0\",\n\t\"data\": {\n\t\t\"my_param\": \"This is an example of value from template installation\"\n\t}\n}"
+						},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "Get installed template on given project",
+					"request": {
+						"url": "http://{{host}}:{{port}}{{prefix}}/projects/my-project/template",
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
 							"raw": "{\n\t\"name\": \"my-template\",\n\t\"data\": {\n\t\t\"my_param\": \"This is an example of value from template installation\"\n\t}\n}"
 						},
 						"description": ""
@@ -219,7 +239,7 @@
 				{
 					"name": "List project settings",
 					"request": {
-						"url": "http://{{host}}/api/projects/my-project/settings",
+						"url": "http://{{host}}:{{port}}{{prefix}}/projects/my-project/settings",
 						"method": "GET",
 						"header": [
 							{
@@ -239,7 +259,7 @@
 				{
 					"name": "Get project settings",
 					"request": {
-						"url": "http://{{host}}/api/projects/my-project/settings/my-config",
+						"url": "http://{{host}}:{{port}}{{prefix}}/projects/my-project/settings/my-config",
 						"method": "GET",
 						"header": [
 							{
@@ -259,8 +279,8 @@
 				{
 					"name": "Get project settings schema",
 					"request": {
-						"url": "http://{{host}}/api/projects/my-project/settings/my-config",
-						"method": "GET",
+						"url": "http://{{host}}:{{port}}{{prefix}}/projects/my-project/settings/my-config",
+						"method": "PUT",
 						"header": [
 							{
 								"key": "Authorization",
@@ -268,14 +288,14 @@
 								"description": ""
 							},
 							{
-								"key": "Accept",
-								"value": "application/schema+json",
+								"key": "Content-Type",
+								"value": "application/json",
 								"description": ""
 							}
 						],
 						"body": {
 							"mode": "raw",
-							"raw": ""
+							"raw": "{\n\t\"var1\":\"An example of configuration\"\n}"
 						},
 						"description": ""
 					},
@@ -284,7 +304,7 @@
 				{
 					"name": "Set project settings",
 					"request": {
-						"url": "http://{{host}}/api/projects/my-project/settings/my-config",
+						"url": "http://{{host}}:{{port}}{{prefix}}/projects/my-project/settings/my-config",
 						"method": "PUT",
 						"header": [
 							{
@@ -315,7 +335,7 @@
 				{
 					"name": "List templates",
 					"request": {
-						"url": "http://{{host}}/api/templates",
+						"url": "http://{{host}}:{{port}}{{prefix}}/templates",
 						"method": "GET",
 						"header": [
 							{
@@ -330,9 +350,9 @@
 					"response": []
 				},
 				{
-					"name": "Get template permissions",
+					"name": "Get template information",
 					"request": {
-						"url": "http://{{host}}/api/templates/my-template",
+						"url": "http://{{host}}:{{port}}{{prefix}}/templates/my-template",
 						"method": "GET",
 						"header": [
 							{
@@ -354,7 +374,7 @@
 				{
 					"name": "Get template schema",
 					"request": {
-						"url": "http://{{host}}/api/templates/my-template",
+						"url": "http://{{host}}:{{port}}{{prefix}}/templates/my-template",
 						"method": "GET",
 						"header": [
 							{
@@ -370,28 +390,6 @@
 						],
 						"body": {},
 						"description": ""
-					},
-					"response": []
-				},
-				{
-					"name": "Get template read me",
-					"request": {
-						"url": "http://{{host}}/api/templates/my-template",
-						"method": "GET",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer {{token}}",
-								"description": ""
-							},
-							{
-								"key": "Accept",
-								"value": "text/markdown",
-								"description": ""
-							}
-						],
-						"body": {},
-						"description": "If you added a README.md file in your template, this API call returns it."
 					},
 					"response": []
 				}
