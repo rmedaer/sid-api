@@ -2,22 +2,22 @@
 
 ## Overview
 
-This repository contains an HTTP API for SID project. Its purpose is to manage configuration repositories. These repositories could contain Ansible or Stackstorm configurations based on schemas.
+This repository contains an HTTP API for SID project. Its purpose is to manage configuration repositories. These repositories can contain configurations from many engines such as Ansible or Stackstorm.
 
-## Installation
-    
 ## Contributing
 
-XXX
+The SID API is still under development. To contribute, please:
 
-## Example
-
-XXX
+ - Fork this repository.
+ - Commit your changes **on develop branch** or in new branch **from develop**.
+ - Create a PR with a summary of your changes.
 
 ## License
 
-XXX
+Apache Software License 2.0
 
 ## Authors
 
-Raphael Medaer (Escaux) <rme@escaux.com> 
+Raphael Medaer [&lt;raphael@medaer.me&gt;](mailto:raphael@medaer.me)
+
+[comment]: <> (This is a comment, it will not be included)
