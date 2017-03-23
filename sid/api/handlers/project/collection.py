@@ -23,7 +23,10 @@ class ProjectCollectionHandler(AbstractWarehouseHandler):
         - POST /projects -- Create a new project
     """
 
-    @http.available_content_type(['application/json'])
+    @http.available_content_type([
+        'application/schema+json',
+        'application/json'
+    ])
     def get(self, *args, **kwargs):
         """
         List all projects.
@@ -33,9 +36,16 @@ class ProjectCollectionHandler(AbstractWarehouseHandler):
         > Accept: */*
         >
         """
-        self.write([project
-                    for project in self.warehouse.repos
-                    if project.name.startswith(__projects_prefix__)])
+        output_content_type = kwargs['output_content_type']
+
+        if output_content_type == 'application/json':
+            self.write([project
+                        for project in self.warehouse.repos
+                        if project.name.startswith(__projects_prefix__)])
+
+        elif output_content_type == 'application/schema+json':
+            self.write(PROJECT_SCHEMA)
+
 
     @auth.require_authentication()
     @http.accepted_content_type(['application/json'])
